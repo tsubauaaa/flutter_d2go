@@ -1,0 +1,42 @@
+group 'com.tsubauaaa.flutter_d2go'
+version '1.0'
+
+buildscript {
+    repositories {
+        google()
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:4.1.0'
+    }
+}
+
+rootProject.allprojects {
+    repositories {
+        google()
+        jcenter()
+    }
+}
+
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 30
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    defaultConfig {
+        minSdkVersion 21
+    }
+}
+
+dependencies{
+    implementation 'org.pytorch:pytorch_android:1.8.0'
+    implementation 'org.pytorch:pytorch_android_torchvision:1.8.0'
+    implementation 'org.pytorch:torchvision_ops:0.9.0'
+    implementation 'com.facebook.soloader:nativeloader:0.8.0'
+}
