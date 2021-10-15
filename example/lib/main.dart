@@ -1,11 +1,11 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'dart:async';
-
 import 'package:flutter/services.dart';
 import 'package:flutter_d2go/flutter_d2go.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 
 void main() {
   runApp(const MyApp());
@@ -20,6 +20,8 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   List? _recognitions;
+  File? _selectedImage;
+  final List<String> _imageList = ['test1.png', 'test2.jpeg', 'test3.png'];
   int _index = 0;
   final ImagePicker _picker = ImagePicker();
 
@@ -43,14 +45,15 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    List<String> imageList = ['test1.png', 'test2.jpeg', 'test3.png'];
     List<Widget> stackChildren = [];
     stackChildren.add(
       Positioned(
-        child: Image.asset(
-          'assets/images/${imageList[_index]}',
-          fit: BoxFit.fill,
-        ),
+        child: _selectedImage == null
+            ? Image.asset(
+                'assets/images/${_imageList[_index]}',
+                fit: BoxFit.fill,
+              )
+            : Image.file(_selectedImage!),
       ),
     );
     return MaterialApp(
@@ -67,7 +70,7 @@ class _MyAppState extends State<MyApp> {
             ),
             const SizedBox(height: 48),
             MyButton(
-              onPressed: runD2Go,
+              onPressed: detect,
               text: 'Detect',
             ),
             Padding(
@@ -79,8 +82,15 @@ class _MyAppState extends State<MyApp> {
                       onPressed: () => setState(() {
                             _index != 2 ? _index += 1 : _index = 0;
                           }),
-                      text: 'Test Imag\n${_index + 1}/${imageList.length}'),
-                  MyButton(onPressed: () {}, text: 'Select'),
+                      text: 'Test Imag\n${_index + 1}/${_imageList.length}'),
+                  MyButton(
+                      onPressed: () async {
+                        final XFile? pickedFile = await _picker.pickImage(
+                            source: ImageSource.gallery);
+                        if (pickedFile == null) return;
+                        setState(() => _selectedImage = File(pickedFile.path));
+                      },
+                      text: 'Select'),
                   MyButton(onPressed: () {}, text: 'Live'),
                 ],
               ),
@@ -91,15 +101,23 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
-  Future runD2Go() async {
-    final XFile? pickedFile =
-        await _picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile == null) return;
-    var recognitionList =
-        await FlutterD2go.getPredictionD2Go(image: File(pickedFile.path));
+  Future detect() async {
+    final image = _selectedImage ??
+        await getImageFileFromAssets('assets/images/${_imageList[_index]}');
+    var recognitionList = await FlutterD2go.getPredictionD2Go(image: image);
     debugPrint(recognitionList.toString());
     debugPrint(recognitionList!.length.toString());
     setState(() => _recognitions = recognitionList);
+  }
+
+  Future<File> getImageFileFromAssets(String path) async {
+    final byteData = await rootBundle.load(path);
+    final fileName = path.split('/').last;
+    final file = File('${(await getTemporaryDirectory()).path}/$fileName');
+    await file.writeAsBytes(byteData.buffer
+        .asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
+
+    return file;
   }
 }
 
