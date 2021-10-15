@@ -48,10 +48,11 @@ class _MyAppState extends State<MyApp> {
     List<Widget> stackChildren = [];
     stackChildren.add(
       Positioned(
+        // top: 0.0,
+        // left: 0.0,
         child: _selectedImage == null
             ? Image.asset(
                 'assets/images/${_imageList[_index]}',
-                fit: BoxFit.fill,
               )
             : Image.file(_selectedImage!),
       ),
@@ -65,8 +66,11 @@ class _MyAppState extends State<MyApp> {
         body: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Stack(
-              children: stackChildren,
+            SizedBox(height: 48),
+            Expanded(
+              child: Stack(
+                children: stackChildren,
+              ),
             ),
             const SizedBox(height: 48),
             MyButton(
