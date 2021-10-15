@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 
 import 'package:flutter/services.dart';
-import 'package:flutter_d2go/d2go_model.dart';
 import 'package:flutter_d2go/flutter_d2go.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -20,9 +19,8 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  String _recognitions = 'Unknown';
+  List? _recognitions;
 
-  D2GoModel? _d2Model;
   final ImagePicker _picker = ImagePicker();
 
   @override
@@ -36,7 +34,7 @@ class _MyAppState extends State<MyApp> {
     String modelPath = 'assets/models/d2go.pt';
     String labelPath = 'assets/models/classes.txt';
     try {
-      _d2Model = await FlutterD2go.loadModel(modelPath, labelPath);
+      FlutterD2go.loadModel(modelPath, labelPath);
       setState(() {});
     } on PlatformException {
       debugPrint('only supported for android and ios so far');
@@ -45,14 +43,13 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint(_d2Model.toString());
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
           title: const Text('Plugin example app'),
         ),
         body: Center(
-          child: Text('Running on: $_recognitions\n'),
+          child: Text('recognitions: ${_recognitions.toString()}\n'),
         ),
         floatingActionButton: FloatingActionButton(
           child: const Text('Inf'),
@@ -67,8 +64,9 @@ class _MyAppState extends State<MyApp> {
         await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile == null) return;
     var recognitionList =
-        await _d2Model!.getPredictionD2Go(image: File(pickedFile.path));
+        await FlutterD2go.getPredictionD2Go(image: File(pickedFile.path));
     debugPrint(recognitionList.toString());
     debugPrint(recognitionList!.length.toString());
+    setState(() => _recognitions = recognitionList);
   }
 }

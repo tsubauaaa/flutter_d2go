@@ -1,6 +1,5 @@
 package com.tsubauaaa.flutter_d2go;
 
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
@@ -42,11 +41,10 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
     NativeLoader.loadLibrary("torchvision_ops");
   }
 
-  ArrayList<Module> modules = new ArrayList<>();
-  List<String> classes = new ArrayList<>();
+  Module module;
+  ArrayList<String> classes = new ArrayList<>();
 
   private static final String CHANNEL_NAME = "tsubauaaa.com/flutter_d2go";
-  private static Context context;
 
 
   @Override
@@ -93,7 +91,7 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
     try {
       classes.clear();
       String absModelPath = call.argument("absModelPath");
-      modules.add(Module.load(absModelPath));
+      module = Module.load(absModelPath);
 
       String absLabelPath = call.argument("absLabelPath");
       File labels = new File(absLabelPath);
@@ -102,8 +100,7 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
       while ((line = br.readLine()) != null) {
         classes.add(line);
       }
-
-      result.success(modules.size() - 1);
+      result.success("success");
     } catch (Exception e) {
       String assetModelPath = call.argument("assetModelPath");
       String assetLabelPath = call.argument("assetLabelPath");
@@ -126,7 +123,6 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
    *               "confidenceInClass": Float, "detectedClass": String }のList
    */
   private void d2go(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
-    Module module;
     Bitmap bitmap;
     float [] mean;
     float [] std;
@@ -136,7 +132,6 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
     float imageWidthScale, imageHeightScale;
 
 
-    int index = call.argument("index");
     byte[] imageBytes = call.argument("image");
 
 
@@ -150,9 +145,6 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
 
     inputWidth = call.argument("width");
     inputHeight = call.argument("height");
-
-    // loadModelして生成したPyTorch Moduleを取得
-    module = modules.get(index);
 
     // bitmap objectをimageから作成してサイズを復元
     bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);

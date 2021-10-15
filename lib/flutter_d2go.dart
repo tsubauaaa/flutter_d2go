@@ -2,10 +2,14 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
-
-import 'd2go_model.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
+
+const kTorchvisionNormMeanRGB = [0.0, 0.0, 0.0];
+const kTorchvisionNormStdRGB = [1.0, 1.0, 1.0];
+const kInputWidth = 640;
+const kInputHeight = 640;
+const kMinScore = 0.4;
 
 class FlutterD2go {
   static const MethodChannel _channel =
@@ -15,16 +19,37 @@ class FlutterD2go {
   /// が読み込むためのパス形式の[absPath]を作成する
   /// invokeMethodでloadModelを呼び出し、D2GoModelクラスインスタンス[D2GoModel(index)]
   /// を取得、それを返却するメソッド
-  static Future<D2GoModel> loadModel(String modelPath, String labelPath) async {
+  static Future loadModel(String modelPath, String labelPath) async {
     String absModelPath = await _getAbsolutePath(modelPath);
     String absLabelPath = await _getAbsolutePath(labelPath);
-    int index = await _channel.invokeMethod('loadModel', {
+    await _channel.invokeMethod('loadModel', {
       'absModelPath': absModelPath,
       'absLabelPath': absLabelPath,
       'assetModelPath': modelPath,
       'assetLabelPath': labelPath,
     });
-    return D2GoModel(index);
+    return;
+  }
+
+  static Future<List?> getPredictionD2Go({required File image}) async {
+    // Segmentation Label
+    final List<String> labels = ['book'];
+
+    // 推論
+    final List? prediction = await _channel.invokeMethod(
+      'd2go',
+      {
+        'index': 0,
+        'image': image.readAsBytesSync(),
+        'width': kInputWidth,
+        'height': kInputHeight,
+        'mean': kTorchvisionNormMeanRGB,
+        'std': kTorchvisionNormStdRGB,
+        'minScore': kMinScore,
+      },
+    );
+
+    return prediction;
   }
 
   /// Flutter内のassetにあるD2Goモデル(d2go.pt)[path]をNativeが触れるパス[dirPath]にコピー
