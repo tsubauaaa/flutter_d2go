@@ -80,7 +80,11 @@ class _MyAppState extends State<MyApp> {
                 children: [
                   MyButton(
                       onPressed: () => setState(() {
-                            _index != 2 ? _index += 1 : _index = 0;
+                            if (_selectedImage == null) {
+                              _index != 2 ? _index += 1 : _index = 0;
+                            } else {
+                              _selectedImage = null;
+                            }
                           }),
                       text: 'Test Imag\n${_index + 1}/${_imageList.length}'),
                   MyButton(
