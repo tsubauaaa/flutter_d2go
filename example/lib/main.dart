@@ -60,13 +60,12 @@ class _MyAppState extends State<MyApp> {
           backgroundColor: Colors.deepPurpleAccent,
         ),
         body: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 64, bottom: 32),
-              child: Stack(
-                children: stackChildren,
-              ),
+            Stack(
+              children: stackChildren,
             ),
+            const SizedBox(height: 48),
             MyButton(
               onPressed: runD2Go,
               text: 'Detect',
