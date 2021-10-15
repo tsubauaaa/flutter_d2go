@@ -20,7 +20,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   List? _recognitions;
-
+  int _index = 0;
   final ImagePicker _picker = ImagePicker();
 
   @override
@@ -43,17 +43,50 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+    List<String> imageList = ['test1.png', 'test2.jpeg', 'test3.png'];
+    List<Widget> stackChildren = [];
+    stackChildren.add(
+      Positioned(
+        child: Image.asset(
+          'assets/images/${imageList[_index]}',
+          fit: BoxFit.fill,
+        ),
+      ),
+    );
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: const Text('Plugin example app'),
+          title: const Text('Flutter D2Go'),
+          backgroundColor: Colors.deepPurpleAccent,
         ),
-        body: Center(
-          child: Text('recognitions: ${_recognitions.toString()}\n'),
-        ),
-        floatingActionButton: FloatingActionButton(
-          child: const Text('Inf'),
-          onPressed: runD2Go,
+        body: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 64, bottom: 32),
+              child: Stack(
+                children: stackChildren,
+              ),
+            ),
+            MyButton(
+              onPressed: runD2Go,
+              text: 'Detect',
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 48.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  MyButton(
+                      onPressed: () => setState(() {
+                            _index != 2 ? _index += 1 : _index = 0;
+                          }),
+                      text: 'Test Imag\n${_index + 1}/${imageList.length}'),
+                  MyButton(onPressed: () {}, text: 'Select'),
+                  MyButton(onPressed: () {}, text: 'Live'),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -68,5 +101,33 @@ class _MyAppState extends State<MyApp> {
     debugPrint(recognitionList.toString());
     debugPrint(recognitionList!.length.toString());
     setState(() => _recognitions = recognitionList);
+  }
+}
+
+class MyButton extends StatelessWidget {
+  const MyButton({Key? key, required this.onPressed, required this.text})
+      : super(key: key);
+
+  final VoidCallback onPressed;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 96,
+      height: 42,
+      child: ElevatedButton(
+        onPressed: onPressed,
+        child: Text(
+          text,
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: Colors.black),
+        ),
+        style: ElevatedButton.styleFrom(
+          primary: Colors.grey[300],
+          elevation: 0,
+        ),
+      ),
+    );
   }
 }

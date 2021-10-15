@@ -85,7 +85,7 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
    *             assetModelPath モデルの読み込み失敗時に、ログ表示するために使うD2GoモデルのFlutterのassetパス
    *             absLabelPath ラベルが書かれているファイルのパス
    *             assetLabelPath ラベルの読み込み失敗時に、ログ表示するために使うD2GoモデルのFlutterのassetパス
-   * @param result 成功した場合は、ArrayList<org.pytorch.Module>のindexをresult.successで返却する
+   * @param result 成功した場合は、文字列"success"をresult.successで返却する
    */
   private void loadModel(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
     try {
@@ -111,8 +111,7 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
   /**
    * <p>D2Goモデルを使って推論し、結果を整形して返却する</>
    *
-   * @param call [index] ArrayList<Module>のindex,
-   *             [image] 推論対象の画像のList<Bytes>,
+   * @param call [image] 推論対象の画像のList<Bytes>,
    *             [width] 画像の横長,
    *             [height] 画像の縦長,
    *             [mean] Normalizeで使う平均値,

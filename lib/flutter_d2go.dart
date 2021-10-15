@@ -17,8 +17,7 @@ class FlutterD2go {
 
   /// D2Goモデル(d2go.pt)の相対パス[modelPath]を受けて、org.pytorch.Moduleのloadメソッド
   /// が読み込むためのパス形式の[absPath]を作成する
-  /// invokeMethodでloadModelを呼び出し、D2GoModelクラスインスタンス[D2GoModel(index)]
-  /// を取得、それを返却するメソッド
+  /// invokeMethodでloadModelを呼び出し、Native側のorg.pytorch.Moduleを生成するメソッド
   static Future loadModel(String modelPath, String labelPath) async {
     String absModelPath = await _getAbsolutePath(modelPath);
     String absLabelPath = await _getAbsolutePath(labelPath);
@@ -32,14 +31,10 @@ class FlutterD2go {
   }
 
   static Future<List?> getPredictionD2Go({required File image}) async {
-    // Segmentation Label
-    final List<String> labels = ['book'];
-
     // 推論
     final List? prediction = await _channel.invokeMethod(
       'd2go',
       {
-        'index': 0,
         'image': image.readAsBytesSync(),
         'width': kInputWidth,
         'height': kInputHeight,
@@ -52,7 +47,7 @@ class FlutterD2go {
     return prediction;
   }
 
-  /// Flutter内のassetにあるD2Goモデル(d2go.pt)[path]をNativeが触れるパス[dirPath]にコピー
+  /// Flutter内のassetにあるD2Goモデル[path]をNativeが触れるパス[dirPath]にコピー
   /// するメソッド
   static Future<String> _getAbsolutePath(String path) async {
     // アプリがデータを配置可能なディレクトリのパス[dir]
