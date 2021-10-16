@@ -8,7 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const MaterialApp(home: MyApp()));
 }
 
 class MyApp extends StatefulWidget {
@@ -19,7 +19,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  List? _recognitions;
+  List<RecognitionModel>? _recognitions;
   File? _selectedImage;
   final List<String> _imageList = ['test1.png', 'test2.jpeg', 'test3.png'];
   int _index = 0;
@@ -43,79 +43,27 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    List<Widget> stackChildren = [];
-    stackChildren.add(
-      Positioned(
-        // top: 0.0,
-        // left: 0.0,
-        child: _selectedImage == null
-            ? Image.asset(
-                'assets/images/${_imageList[_index]}',
-              )
-            : Image.file(_selectedImage!),
-      ),
-    );
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Flutter D2Go'),
-          backgroundColor: Colors.deepPurpleAccent,
-        ),
-        body: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(height: 48),
-            Expanded(
-              child: Stack(
-                children: stackChildren,
-              ),
-            ),
-            const SizedBox(height: 48),
-            MyButton(
-              onPressed: detect,
-              text: 'Detect',
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 48.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  MyButton(
-                      onPressed: () => setState(() {
-                            if (_selectedImage == null) {
-                              _index != 2 ? _index += 1 : _index = 0;
-                            } else {
-                              _selectedImage = null;
-                            }
-                          }),
-                      text: 'Test Imag\n${_index + 1}/${_imageList.length}'),
-                  MyButton(
-                      onPressed: () async {
-                        final XFile? pickedFile = await _picker.pickImage(
-                            source: ImageSource.gallery);
-                        if (pickedFile == null) return;
-                        setState(() => _selectedImage = File(pickedFile.path));
-                      },
-                      text: 'Select'),
-                  MyButton(onPressed: () {}, text: 'Live'),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Future detect() async {
     final image = _selectedImage ??
         await getImageFileFromAssets('assets/images/${_imageList[_index]}');
-    var recognitionList = await FlutterD2go.getPredictionD2Go(image: image);
-    debugPrint(recognitionList.toString());
-    debugPrint(recognitionList!.length.toString());
-    setState(() => _recognitions = recognitionList);
+    final predictions = await FlutterD2go.getPredictionD2Go(image: image);
+    List<RecognitionModel>? recognitions;
+    if (predictions != null && predictions.isNotEmpty) {
+      recognitions = predictions
+          .map(
+            (e) => RecognitionModel(
+                Rectangle(
+                  e['rect']['left'],
+                  e['rect']['top'],
+                  e['rect']['right'],
+                  e['rect']['bottom'],
+                ),
+                e['confidenceInClass'],
+                e['detectedClass']),
+          )
+          .toList();
+    }
+    setState(() => _recognitions = recognitions);
   }
 
   Future<File> getImageFileFromAssets(String path) async {
@@ -126,6 +74,89 @@ class _MyAppState extends State<MyApp> {
         .asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
 
     return file;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    double width = MediaQuery.of(context).size.width;
+    List<Widget> stackChildren = [];
+    stackChildren.add(
+      Positioned(
+        top: 0.0,
+        left: 0.0,
+        width: width,
+        child: _selectedImage == null
+            ? Image.asset(
+                'assets/images/${_imageList[_index]}',
+              )
+            : Image.file(_selectedImage!),
+      ),
+    );
+
+    if (_recognitions != null) {
+      stackChildren.addAll(_recognitions!.map(
+        (recognition) {
+          return RenderBoxes(
+            imageWidthScale: 1,
+            imageHeightScale: 1,
+            recognition: recognition,
+          );
+        },
+      ).toList());
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Flutter D2Go'),
+        backgroundColor: Colors.deepPurpleAccent,
+      ),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const SizedBox(height: 48),
+          Expanded(
+            child: Stack(
+              children: stackChildren,
+            ),
+          ),
+          const SizedBox(height: 48),
+          MyButton(
+            onPressed: detect,
+            text: 'Detect',
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 48.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                MyButton(
+                    onPressed: () => setState(() {
+                          _recognitions = null;
+                          if (_selectedImage == null) {
+                            _index != 2 ? _index += 1 : _index = 0;
+                          } else {
+                            _selectedImage = null;
+                          }
+                        }),
+                    text: 'Test Imag\n${_index + 1}/${_imageList.length}'),
+                MyButton(
+                    onPressed: () async {
+                      final XFile? pickedFile =
+                          await _picker.pickImage(source: ImageSource.gallery);
+                      if (pickedFile == null) return;
+                      setState(() {
+                        _recognitions = null;
+                        _selectedImage = File(pickedFile.path);
+                      });
+                    },
+                    text: 'Select'),
+                MyButton(onPressed: () {}, text: 'Live'),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -155,4 +186,72 @@ class MyButton extends StatelessWidget {
       ),
     );
   }
+}
+
+class RenderBoxes extends StatelessWidget {
+  const RenderBoxes({
+    Key? key,
+    required this.recognition,
+    required this.imageWidthScale,
+    required this.imageHeightScale,
+  }) : super(key: key);
+
+  final RecognitionModel recognition;
+  final double imageWidthScale;
+  final double imageHeightScale;
+
+  @override
+  Widget build(BuildContext context) {
+    final left = recognition.rect.left * imageWidthScale;
+    final top = recognition.rect.top * imageHeightScale;
+    final right = recognition.rect.right * imageWidthScale;
+    final bottom = recognition.rect.bottom * imageHeightScale;
+    return Positioned(
+      left: left,
+      top: top,
+      width: right - left,
+      height: bottom - top,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: const BorderRadius.all(Radius.circular(8.0)),
+          border: Border.all(
+            color: Colors.yellow,
+            width: 2,
+          ),
+        ),
+        child: Text(
+          "${recognition.detectedClass} ${(recognition.confidenceInClass * 100).toStringAsFixed(0)}%",
+          style: TextStyle(
+            background: Paint()..color = Colors.yellow,
+            color: Colors.black,
+            fontSize: 15.0,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class RecognitionModel {
+  RecognitionModel(
+    this.rect,
+    this.confidenceInClass,
+    this.detectedClass,
+  );
+  Rectangle rect;
+  double confidenceInClass;
+  String detectedClass;
+}
+
+class Rectangle {
+  Rectangle(
+    this.left,
+    this.top,
+    this.right,
+    this.bottom,
+  );
+  double left;
+  double top;
+  double right;
+  double bottom;
 }
