@@ -135,7 +135,7 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
     byte[] imageBytes = call.argument("image");
 
 
-    // meanとstdをfloat変換
+    // Convert [mean] and [std] to float
     ArrayList<Double> _mean = call.argument("mean");
     mean = toFloatPrimitives(_mean.toArray(new Double[0]));
     ArrayList<Double> _std = call.argument("std");
@@ -146,18 +146,21 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
     inputWidth = call.argument("width");
     inputHeight = call.argument("height");
 
-    // bitmap objectをimageから作成してサイズを復元
+    // Create a bitmap object from image and fit the size to the model
     bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
     Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap, inputWidth, inputHeight, true);
 
+    // Get the increase / decrease ratio between the bitmap and the original image
     imageWidthScale = (float)bitmap.getWidth() / inputWidth;
     imageHeightScale = (float)bitmap.getHeight() / inputHeight;
 
+
+    // Create a dtype torch.float32 tensor to input to the model with [inputWidth], [inputHeight] size and bitmap data
     final FloatBuffer floatBuffer = Tensor.allocateFloatBuffer(3 * resizedBitmap.getWidth() * resizedBitmap.getHeight());
     TensorImageUtils.bitmapToFloatBuffer(resizedBitmap,0,0, resizedBitmap.getWidth(), resizedBitmap.getHeight(), mean, std, floatBuffer, 0);
     final Tensor inputTensor = Tensor.fromBlob(floatBuffer, new long[] {3, resizedBitmap.getHeight(), resizedBitmap.getWidth()});
 
-    // 推論
+    // inference
     IValue[] outputTuple = module.forward(IValue.listFrom(inputTensor)).toTuple();
 
     final Map<String, IValue> map = outputTuple[1].toList()[0].toDictStringKey();
@@ -166,24 +169,29 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
     float[] scoresData;
     long[] labelsData;
 
-    // 推論結果整形
+    // Formatting inference results
     if (map.containsKey("boxes")) {
       final Tensor boxesTensor = map.get("boxes").toTensor();
       final Tensor scoresTensor = map.get("scores").toTensor();
       final Tensor labelsTensor = map.get("labels").toTensor();
+
+      // [boxesData] has 4 sets of left, top, right and bottom per instance
+      // boxesData = [left1, top1, right1, bottom1, left2, top2, right2, bottom2, left3, top3, ..., bottomN]
       boxesData = boxesTensor.getDataAsFloatArray();
       scoresData = scoresTensor.getDataAsFloatArray();
       labelsData = labelsTensor.getDataAsLongArray();
 
+      // Inferred number of all instances
       final int totalInstances = scoresData.length;
 
-      // 全インスタンス数 x outputカラム(left, top, right, bottom, score, label)
       List<Map<String, Object>> outputs = new ArrayList<>();
       for (int i = 0; i < totalInstances; i++) {
         if (scoresData[i] < minScore)
           continue;
         Map<String, Object> output = new LinkedHashMap<>();
         Map<String, Float> rect = new LinkedHashMap<>();
+
+        // Set rect to a value that matches the original image
         rect.put("left", boxesData[4 * i + 0] * imageWidthScale);
         rect.put("top", boxesData[4 * i + 1] * imageHeightScale);
         rect.put("right", boxesData[4 * i + 2] * imageWidthScale);
