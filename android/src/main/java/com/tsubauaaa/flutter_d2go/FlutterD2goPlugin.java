@@ -24,6 +24,7 @@ import androidx.annotation.NonNull;
 
 import io.flutter.Log;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
+import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
@@ -33,6 +34,8 @@ import io.flutter.plugin.common.PluginRegistry;
 /** FlutterD2goPlugin */
 public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
 
+  // Dealing with torchvision options problem
+  // Refer to <a href="https://discuss.pytorch.org/t/torchvision-ops-nms-on-android-mobile/81017/6">https://discuss.pytorch.org/t/torchvision-ops-nms-on-android-mobile/81017/6</a>
   static {
     if (!NativeLoader.isInitialized()) {
       NativeLoader.init(new SystemDelegate());
@@ -46,10 +49,9 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
 
   private static final String CHANNEL_NAME = "tsubauaaa.com/flutter_d2go";
 
-
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
-    final MethodChannel channel = new MethodChannel(flutterPluginBinding.getFlutterEngine().getDartExecutor(),
+    final MethodChannel channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(),
             CHANNEL_NAME);
     channel.setMethodCallHandler(new FlutterD2goPlugin());
   }
