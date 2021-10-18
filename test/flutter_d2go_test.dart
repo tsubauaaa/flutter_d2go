@@ -22,6 +22,7 @@ void main() {
     channel.setMockMethodCallHandler(null);
   });
 
+  // TODO: test loadModel method
   // test('loadModel', () async {
   //   await FlutterD2go.loadModel(
   //     './example/assets/models/d2go.pt',
