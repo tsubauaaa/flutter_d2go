@@ -68,8 +68,8 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
         loadModel(call, result);
         break;
 
-      case "d2go":
-        d2go(call, result);
+      case "predictImage":
+        predictImage(call, result);
         break;
 
       default:
@@ -121,7 +121,7 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
    *               [outputs]は{ "rect": { "left": Float, "top": Float, "right": Float, "bottom": Float },
    *               "confidenceInClass": Float, "detectedClass": String }のList
    */
-  private void d2go(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
+  private void predictImage(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
     Bitmap bitmap;
     float [] mean;
     float [] std;
