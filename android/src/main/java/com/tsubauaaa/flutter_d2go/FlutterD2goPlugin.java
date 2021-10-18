@@ -24,7 +24,6 @@ import androidx.annotation.NonNull;
 
 import io.flutter.Log;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
-import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
@@ -81,13 +80,13 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
   }
 
   /**
-   * <p>d2goモデルを読み込んで、[modules]にorg.pytorch.Moduleを追加し、そのindexを返却する</>
+   * <p>Load the d2go model and get org.pytorch.Module in [module]. Read the classes file and add classes to [classes]</>
    *
-   * @param call absModelPath org.pytorch.Moduleのloadメソッドが読み込むD2Goモデルのパス,
-   *             assetModelPath モデルの読み込み失敗時に、ログ表示するために使うD2GoモデルのFlutterのassetパス
-   *             absLabelPath ラベルが書かれているファイルのパス
-   *             assetLabelPath ラベルの読み込み失敗時に、ログ表示するために使うD2GoモデルのFlutterのassetパス
-   * @param result 成功した場合は、文字列"success"をresult.successで返却する
+   * @param call absModelPath The path of the D2Go model loaded by the load of org.pytorch.Module
+   *             assetModelPath Flutter asset path of D2Go model used to display log when model or classes loading fails
+   *             absLabelPath The path of the file where the class is written
+   *             assetLabelPath Flutter asset path of classes file used to display log when model or classes loading fails
+   * @param result If successful, return the string "success" in result.success
    */
   private void loadModel(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
     try {
@@ -111,17 +110,17 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
   }
 
   /**
-   * <p>D2Goモデルを使って推論し、結果を整形して返却する</>
+   * <p>Infer using the D2Go model, format the result and return it</>
    *
-   * @param call [image] 推論対象の画像のList<Bytes>,
-   *             [width] 画像の横長,
-   *             [height] 画像の縦長,
-   *             [mean] Normalizeで使う平均値,
-   *             [std] Normalizeで使う標準偏差,
-   *             [minScore] しきい値
-   * @param result 成功した場合は、[outputs]をresult.successで返却する,
-   *               [outputs]は{ "rect": { "left": Float, "top": Float, "right": Float, "bottom": Float },
-   *               "confidenceInClass": Float, "detectedClass": String }のList
+   * @param call [image] List of bytes image to be inferred<Bytes>
+   *             [width] width length of image
+   *             [height] height length of image
+   *             [mean] Average value used in Normalize
+   *             [std] Standard deviation used in Normalize
+   *             [minScore] threshold
+   * @param result If successful, return [outputs] with result.success
+   *               The format of [outputs] is List of { "rect": { "left": Float, "top": Float, "right": Float, "bottom": Float },
+   *               "confidenceInClass": Float, "detectedClass": String }
    */
   private void predictImage(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
     Bitmap bitmap;
@@ -201,10 +200,10 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
   }
 
   /**
-   * <p>Normalize parameterをFloat変換する</>
+   * <p>Convert Normalize parameter to Float</>
    *
-   * @param objects 変換前のDouble[]
-   * @return primitives 変換後のfloat[]
+   * @param objects Double[] before conversion
+   * @return primitives Float[] after conversion
    */
   private static float[] toFloatPrimitives(Double[] objects) {
     float[] primitives = new float[objects.length];
