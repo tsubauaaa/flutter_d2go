@@ -23,6 +23,8 @@ class _MyAppState extends State<MyApp> {
   File? _selectedImage;
   final List<String> _imageList = ['test1.png', 'test2.jpeg', 'test3.png'];
   int _index = 0;
+  int? _imageWidth;
+  int? _imageHeight;
   final ImagePicker _picker = ImagePicker();
 
   @override
@@ -31,7 +33,6 @@ class _MyAppState extends State<MyApp> {
     loadModel();
   }
 
-  // Platform messages are asynchronous, so we initialize in an async method.
   Future loadModel() async {
     String modelPath = 'assets/models/d2go.pt';
     String labelPath = 'assets/models/classes.txt';
@@ -39,14 +40,18 @@ class _MyAppState extends State<MyApp> {
       FlutterD2go.loadModel(modelPath, labelPath);
       setState(() {});
     } on PlatformException {
-      debugPrint('only supported for android and ios so far');
+      debugPrint('only supported for android so far');
     }
   }
 
   Future detect() async {
     final image = _selectedImage ??
         await getImageFileFromAssets('assets/images/${_imageList[_index]}');
-    final predictions = await FlutterD2go.getPredictionD2Go(image: image);
+    final decodedImage = await decodeImageFromList(image.readAsBytesSync());
+    _imageWidth = decodedImage.width;
+    _imageHeight = decodedImage.height;
+
+    final predictions = await FlutterD2go.getImagePrediction(image: image);
     List<RecognitionModel>? recognitions;
     if (predictions != null && predictions.isNotEmpty) {
       recognitions = predictions
@@ -78,13 +83,13 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    double width = MediaQuery.of(context).size.width;
+    double screenWidth = MediaQuery.of(context).size.width;
     List<Widget> stackChildren = [];
     stackChildren.add(
       Positioned(
         top: 0.0,
         left: 0.0,
-        width: width,
+        width: screenWidth,
         child: _selectedImage == null
             ? Image.asset(
                 'assets/images/${_imageList[_index]}',
@@ -94,11 +99,14 @@ class _MyAppState extends State<MyApp> {
     );
 
     if (_recognitions != null) {
+      final aspectRatio = _imageHeight! / _imageWidth! * screenWidth;
+      final widthScale = screenWidth / _imageWidth!;
+      final heightScale = aspectRatio / _imageHeight!;
       stackChildren.addAll(_recognitions!.map(
         (recognition) {
           return RenderBoxes(
-            imageWidthScale: 1,
-            imageHeightScale: 1,
+            imageWidthScale: widthScale,
+            imageHeightScale: heightScale,
             recognition: recognition,
           );
         },

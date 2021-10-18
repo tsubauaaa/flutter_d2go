@@ -9,7 +9,7 @@ const kTorchvisionNormMeanRGB = [0.0, 0.0, 0.0];
 const kTorchvisionNormStdRGB = [1.0, 1.0, 1.0];
 const kInputWidth = 640;
 const kInputHeight = 640;
-const kMinScore = 0.4;
+const kMinScore = 0.5;
 
 class FlutterD2go {
   static const MethodChannel _channel =
@@ -30,7 +30,7 @@ class FlutterD2go {
     return;
   }
 
-  static Future<List?> getPredictionD2Go({required File image}) async {
+  static Future<List?> getImagePrediction({required File image}) async {
     // 推論
     final List? prediction = await _channel.invokeMethod(
       'd2go',
