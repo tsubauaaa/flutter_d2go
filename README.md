@@ -61,16 +61,16 @@ List<Map<String, dynamic>> predictions = await FlutterD2go.getImagePrediction(
 
 ```dart
 [
-      {
-        rect: {
-          left: 74.65713500976562,
-          top: 76.94147491455078,
-          right: 350.64324951171875,
-          bottom: 323.0279846191406
-        },
-        confidenceInClass: 0.985002338886261,
-        detectedClass: bicycle
-      },
-      ...
+  {
+    rect: {
+      left: 74.65713500976562,
+      top: 76.94147491455078,
+      right: 350.64324951171875,
+      bottom: 323.0279846191406
+    },
+    confidenceInClass: 0.985002338886261,
+    detectedClass: bicycle
+  },
+  ...
 ]
 ```
