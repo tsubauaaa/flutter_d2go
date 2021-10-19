@@ -37,7 +37,10 @@ class _MyAppState extends State<MyApp> {
     String modelPath = 'assets/models/d2go.pt';
     String labelPath = 'assets/models/classes.txt';
     try {
-      FlutterD2go.loadModel(modelPath: modelPath, labelPath: labelPath);
+      await FlutterD2go.loadModel(
+        modelPath: modelPath,
+        labelPath: labelPath,
+      );
       setState(() {});
     } on PlatformException {
       debugPrint('only supported for android so far');
