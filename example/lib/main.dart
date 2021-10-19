@@ -58,7 +58,6 @@ class _MyAppState extends State<MyApp> {
       minScore: 0.7,
     );
     List<RecognitionModel>? recognitions;
-    debugPrint(predictions.toString());
     if (predictions.isNotEmpty) {
       recognitions = predictions
           .map(
