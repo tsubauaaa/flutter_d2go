@@ -53,9 +53,13 @@ class _MyAppState extends State<MyApp> {
     final decodedImage = await decodeImageFromList(image.readAsBytesSync());
     _imageWidth = decodedImage.width;
     _imageHeight = decodedImage.height;
-    final predictions = await FlutterD2go.getImagePrediction(image: image);
+    final predictions = await FlutterD2go.getImagePrediction(
+      image: image,
+      minScore: 0.7,
+    );
     List<RecognitionModel>? recognitions;
-    if (predictions != null && predictions.isNotEmpty) {
+    debugPrint(predictions.toString());
+    if (predictions.isNotEmpty) {
       recognitions = predictions
           .map(
             (e) => RecognitionModel(

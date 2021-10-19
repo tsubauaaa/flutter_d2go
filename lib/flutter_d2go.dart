@@ -64,16 +64,23 @@ class FlutterD2go {
   }
 
   /// A method that calls predictImage with invokeMethod to predict
-  static Future<List?> getImagePrediction({required File image}) async {
-    final List? prediction = await _channel.invokeMethod(
+  static Future<List> getImagePrediction({
+    required File image,
+    int width = kInputWidth,
+    int height = kInputHeight,
+    List<double> mean = kTorchvisionNormMeanRGB,
+    List<double> std = kTorchvisionNormStdRGB,
+    double minScore = kMinScore,
+  }) async {
+    final List prediction = await _channel.invokeMethod(
       'predictImage',
       {
         'image': image.readAsBytesSync(),
-        'width': kInputWidth,
-        'height': kInputHeight,
-        'mean': kTorchvisionNormMeanRGB,
-        'std': kTorchvisionNormStdRGB,
-        'minScore': kMinScore,
+        'width': width,
+        'height': height,
+        'mean': mean,
+        'std': std,
+        'minScore': minScore,
       },
     );
 
