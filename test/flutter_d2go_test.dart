@@ -38,8 +38,8 @@ void main() {
 
   test('loadModel', () async {
     await FlutterD2go.loadModel(
-      '${current.path}/example/assets/models/d2go.pt',
-      '${current.path}/example/assets/models/classes.txt',
+      modelPath: '${current.path}/example/assets/models/d2go.pt',
+      labelPath: '${current.path}/example/assets/models/classes.txt',
     );
     expect(log, <Matcher>[
       isMethodCall('loadModel', arguments: <String, dynamic>{

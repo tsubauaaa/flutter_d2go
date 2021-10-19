@@ -50,7 +50,8 @@ class FlutterD2go {
   /// Receive the relative path [modelPath] of the D2Go model file in Flutter's asset and
   /// get the path [absPath] to read on the Native side.
   /// A method that calls loadModel with invokeMethod and creates org.pytorch.Module on the Native side
-  static Future loadModel(String modelPath, String labelPath) async {
+  static Future loadModel(
+      {required String modelPath, required String labelPath}) async {
     String absModelPath = await _getAbsolutePath(modelPath);
     String absLabelPath = await _getAbsolutePath(labelPath);
     await _channel.invokeMethod('loadModel', {
