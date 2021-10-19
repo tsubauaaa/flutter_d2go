@@ -1,6 +1,6 @@
 # flutter_d2go
 
-Flutter Plugin inferring using [d2go](https://github.com/facebookresearch/d2go), the mobile model of [detectron2](). Currently only Android works. Also, only object detection can be performed.
+Flutter Plugin inferring using [d2go](https://github.com/facebookresearch/d2go), the mobile model of [detectron2](https://github.com/facebookresearch/detectron2). Currently only Android works. Also, only object detection can be performed.
 
 ## Installation
 
