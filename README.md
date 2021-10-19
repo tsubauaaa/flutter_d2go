@@ -8,7 +8,7 @@ Add flutter_d2go to your `pubspec.yaml`.
 
 ```yaml
 dependencies:
-  flutter_d2go: ^0.2.0
+  flutter_d2go: ^0.0.1
 ```
 
 Put the d2go model and class file in the assets directory.
@@ -25,7 +25,7 @@ Run `flutter pub get`.
 flutter pub get
 ```
 
-## import the library
+## Import the library
 
 ```dart
 import 'package:flutter_d2go/flutter_d2go.dart';
@@ -42,7 +42,7 @@ await FlutterD2go.loadModel(
 );
 ```
 
-### get predictions
+### Get predictions
 
 ```dart
 List<Map<String, dynamic>> predictions = await FlutterD2go.getImagePrediction(
@@ -55,7 +55,7 @@ List<Map<String, dynamic>> predictions = await FlutterD2go.getImagePrediction(
 );
 ```
 
-#### output format
+#### Output format
 
 `rect` is the scale of the original image
 
