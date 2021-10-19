@@ -42,10 +42,10 @@ await FlutterD2go.loadModel(
 );
 ```
 
-### get prediction
+### get predictions
 
 ```dart
-final predictions = await FlutterD2go.getImagePrediction(
+List<Map<String, dynamic>> predictions = await FlutterD2go.getImagePrediction(
     image: image,           // required File(dart:io) image
     width: 320,             // defaults to 640
     height: 320,            // defaults to 640
