@@ -1,16 +1,6 @@
 # flutter_d2go_example
 
-Demonstrates how to use the flutter_d2go plugin.
+An application that uses flutter_d2go to detect objects using a D2Go model from images.
 
-## Getting Started
+![](d2go.png)
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
-
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
