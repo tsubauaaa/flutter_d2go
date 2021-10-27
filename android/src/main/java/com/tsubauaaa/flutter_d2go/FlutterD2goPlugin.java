@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -168,18 +169,21 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
     float[] boxesData;
     float[] scoresData;
     long[] labelsData;
+    float[] masksData;
 
     // Formatting inference results
     if (map.containsKey("boxes")) {
       final Tensor boxesTensor = map.get("boxes").toTensor();
       final Tensor scoresTensor = map.get("scores").toTensor();
       final Tensor labelsTensor = map.get("labels").toTensor();
+      final Tensor masksTensor = map.get("masks").toTensor();
 
       // [boxesData] has 4 sets of left, top, right and bottom per instance
       // boxesData = [left1, top1, right1, bottom1, left2, top2, right2, bottom2, left3, top3, ..., bottomN]
       boxesData = boxesTensor.getDataAsFloatArray();
       scoresData = scoresTensor.getDataAsFloatArray();
       labelsData = labelsTensor.getDataAsLongArray();
+      masksData = masksTensor.getDataAsFloatArray();
 
       // Inferred number of all instances
       final int totalInstances = scoresData.length;
@@ -198,6 +202,7 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
         rect.put("bottom", boxesData[4 * i + 3] * imageHeightScale);
 
         output.put("rect", rect);
+        output.put("mask", Arrays.copyOfRange(masksData, i*28*28, (i+1)*28*28));
         output.put("confidenceInClass", scoresData[i]);
         output.put("detectedClass", classes.get((int)(labelsData[i] - 1)));
 

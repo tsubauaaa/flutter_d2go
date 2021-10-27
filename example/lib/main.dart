@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_d2go/flutter_d2go.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
+import 'dart:ui' as ui;
 
 void main() {
   runApp(const MaterialApp(home: MyApp()));
@@ -21,6 +23,7 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   List<RecognitionModel>? _recognitions;
   File? _selectedImage;
+  ui.Image? _segImage;
   final List<String> _imageList = ['test1.png', 'test2.jpeg', 'test3.png'];
   int _index = 0;
   int? _imageWidth;
@@ -34,7 +37,7 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future loadModel() async {
-    String modelPath = 'assets/models/d2go.pt';
+    String modelPath = 'assets/models/d2go_mask.pt';
     String labelPath = 'assets/models/classes.txt';
     try {
       await FlutterD2go.loadModel(
@@ -68,12 +71,73 @@ class _MyAppState extends State<MyApp> {
                   e['rect']['right'],
                   e['rect']['bottom'],
                 ),
+                e['mask'],
                 e['confidenceInClass'],
                 e['detectedClass']),
           )
           .toList();
     }
     setState(() => _recognitions = recognitions);
+  }
+
+  // int xorshift32(int x) {
+  //   x ^= x << 13;
+  //   x ^= x >> 17;
+  //   x ^= x << 5;
+  //   return x;
+  // }
+  //
+  // Future<ui.Image> makeImage(Int32List pixels) {
+  //   final c = Completer<ui.Image>();
+  //   final pixels2 = Int32List(28 * 28);
+  //
+  //   int seed = 0xDEADBEEF;
+  //   for (int i = 0; i < pixels2.length; i++) {
+  //     seed = pixels2[i] = xorshift32(seed);
+  //   }
+  //   debugPrint(pixels2.toString());
+  //   debugPrint(pixels2.length.toString());
+  //   debugPrint(pixels2.buffer.asUint8List().toString());
+  //   debugPrint(pixels2.buffer.asUint8List().length.toString());
+  //   debugPrint(pixels.toString());
+  //   debugPrint(pixels.length.toString());
+  //   ui.decodeImageFromList(
+  //       pixels.buffer.asUint8List(), (Image image) => c.complete(image));
+  //   // ui.decodeImageFromPixels(
+  //   //   pixels2.buffer.asUint8List(),
+  //   //   28,
+  //   //   28,
+  //   //   ui.PixelFormat.rgba8888,
+  //   //   c.complete,
+  //   // );
+  //   return c.future;
+  // }
+
+  Future segment() async {
+    final image = _selectedImage ??
+        await getImageFileFromAssets('assets/images/${_imageList[_index]}');
+    final decodedImage = await decodeImageFromList(image.readAsBytesSync());
+    _imageWidth = decodedImage.width;
+    _imageHeight = decodedImage.height;
+    final predictions = await FlutterD2go.getImagePrediction(
+      image: image,
+      minScore: 0.7,
+    );
+    ui.Image? segImage;
+    Int32List pixels;
+    if (predictions.isNotEmpty) {
+      final List<int> binaryList = predictions
+          .map((e) {
+            return (e['mask'] as Float32List)
+                .map((p) => p > 0.5 ? 255 : 0)
+                .toList();
+          })
+          .toList()
+          .first;
+      pixels = Int32List.fromList(binaryList);
+      // segImage = await makeImage(pixels);
+    }
+    setState(() => _segImage = segImage);
   }
 
   Future<File> getImageFileFromAssets(String path) async {
@@ -132,10 +196,25 @@ class _MyAppState extends State<MyApp> {
               children: stackChildren,
             ),
           ),
+          // if (_segImage != null)
+          RawImage(
+            image: _segImage,
+            width: 28,
+            height: 28,
+          ),
           const SizedBox(height: 48),
-          MyButton(
-            onPressed: detect,
-            text: 'Detect',
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              MyButton(
+                onPressed: detect,
+                text: 'Detect',
+              ),
+              MyButton(
+                onPressed: segment,
+                text: 'Segment',
+              ),
+            ],
           ),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 48.0),
@@ -248,10 +327,12 @@ class RenderBoxes extends StatelessWidget {
 class RecognitionModel {
   RecognitionModel(
     this.rect,
+    this.mask,
     this.confidenceInClass,
     this.detectedClass,
   );
   Rectangle rect;
+  Float32List mask;
   double confidenceInClass;
   String detectedClass;
 }
