@@ -8,13 +8,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.8.2"
-  bitmap:
-    dependency: "direct main"
-    description:
-      name: bitmap
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.1.2"
   boolean_selector:
     dependency: transitive
     description:

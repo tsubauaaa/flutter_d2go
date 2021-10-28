@@ -12,12 +12,9 @@ import org.pytorch.Tensor;
 import org.pytorch.torchvision.TensorImageUtils;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
-import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -111,6 +108,72 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
       String assetLabelPath = call.argument("assetLabelPath");
       Log.e("flutter_d2go", assetModelPath + " or " + assetLabelPath + " are not a proper model or label", e);
     }
+  }
+
+
+  private byte[] addBMPImageHeader(int size)
+  {
+    byte[]buffer = new byte[14];
+    buffer[0] = 0x42;//B
+    buffer[1] = 0x4D;//M
+    buffer[2] = (byte) (size >> 0);//调色板长度
+    buffer[3] = (byte) (size >> 8);
+    buffer[4] = (byte) (size >> 16);
+    buffer[5] = (byte) (size >> 24);
+    buffer[6] = 0x00;
+    buffer[7] = 0x00;
+    buffer[8] = 0x00;
+    buffer[9] = 0x00;
+    buffer[10] = 0x36;
+    buffer[11] = 0x00;
+    buffer[12] = 0x00;
+    buffer[13] = 0x00;
+    return buffer;
+  }
+
+  private byte[] addBMPImageInfosHeader(int w, int h) {
+    byte[] buffer = new byte[40];
+    buffer[0] = 0x28;
+    buffer[1] = 0x00;
+    buffer[2] = 0x00;
+    buffer[3] = 0x00;
+    buffer[4] = (byte) (w >> 0);//宽度
+    buffer[5] = (byte) (w >> 8);
+    buffer[6] = (byte) (w >> 16);
+    buffer[7] = (byte) (w >> 24);
+    buffer[8] = (byte) (h >> 0);//高度
+    buffer[9] = (byte) (h >> 8);
+    buffer[10] = (byte) (h >> 16);
+    buffer[11] = (byte) (h >> 24);
+    buffer[12] = 0x01;
+    buffer[13] = 0x00;
+    buffer[14] = 32;//bmp位数
+    buffer[15] = 0x00;
+    buffer[16] = 0x00;
+    buffer[17] = 0x00;
+    buffer[18] = 0x00;
+    buffer[19] = 0x00;
+    buffer[20] = 0x00;
+    buffer[21] = 0x00;
+    buffer[22] = 0x00;
+    buffer[23] = 0x00;
+    buffer[24] = (byte) 0xE0;
+    buffer[25] = 0x01;
+    buffer[26] = 0x00;
+    buffer[27] = 0x00;
+    buffer[28] = 0x02;
+    buffer[29] = 0x03;
+    buffer[30] = 0x00;
+    buffer[31] = 0x00;
+    buffer[32] = 0x00;
+    buffer[33] = 0x00;
+    buffer[34] = 0x00;
+    buffer[35] = 0x00;
+    buffer[36] = 0x00;
+    buffer[37] = 0x00;
+    buffer[38] = 0x00;
+    buffer[39] = 0x00;
+    return buffer;
   }
 
   /**
@@ -227,10 +290,18 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
             pixels[4*j+1] = g;
             pixels[4*j+2] = b;
             pixels[4*j+3] = a;
-
         }
 
-        output.put("mask", pixels);
+        final byte[] bmpHeader = addBMPImageHeader(pixels.length);
+        final byte[] bmpinfos = addBMPImageInfosHeader(28, 28);
+        byte[] dst = new byte[bmpHeader.length + bmpinfos.length + pixels.length];
+
+        System.arraycopy(bmpHeader, 0, dst, 0, bmpHeader.length);
+        System.arraycopy(bmpinfos, 0, dst, 14, bmpinfos.length);
+        System.arraycopy(pixels, 0, dst, 54, pixels.length);
+
+
+        output.put("mask", dst);
         output.put("confidenceInClass", scoresData[i]);
         output.put("detectedClass", classes.get((int)(labelsData[i] - 1)));
 

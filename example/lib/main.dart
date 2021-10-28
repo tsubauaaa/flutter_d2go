@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
+import 'dart:ui';
 
-import 'package:bitmap/bitmap.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_d2go/flutter_d2go.dart';
@@ -53,20 +53,6 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-  Uint8List getImage(Uint8List bytes) {
-    Bitmap bitmap = Bitmap.fromHeadless(28, 28, bytes); // Not async
-
-    Uint8List headedBitmap = bitmap.buildHeaded();
-
-    debugPrint(bytes.toString());
-    debugPrint(headedBitmap.toString());
-
-    debugPrint(bytes.length.toString());
-    debugPrint(headedBitmap.length.toString());
-
-    return headedBitmap;
-  }
-
   Future detect() async {
     final image = _selectedImage ??
         await getImageFileFromAssets('assets/images/${_imageList[_index]}');
@@ -97,7 +83,7 @@ class _MyAppState extends State<MyApp> {
 
     setState(() {
       _recognitions = recognitions;
-      _segImage = getImage(recognitions!.first.mask);
+      _segImage = recognitions!.first.mask;
     });
   }
 
