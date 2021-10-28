@@ -210,18 +210,18 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
         final byte[] pixels = new byte[28*28*4];
         for (int j = 0; j < 28 * 28; j++) {
           byte a = (byte) 0xff;
-          
+
           byte r;
           byte g;
           byte b;
           if (masksDataByInstance[j] < 0.5) {
-            r = (byte) 0xff;
-            g = (byte) 0xff;
-            b = (byte) 0xff;
-          } else {
             r = (byte) 0;
             g = (byte) 0;
             b = (byte) 0;
+          } else {
+            r = (byte) 0xff;
+            g = (byte) 0xff;
+            b = (byte) 0xff;
           }
             pixels[4*j+0] = r;
             pixels[4*j+1] = g;
