@@ -271,33 +271,39 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
 
         final float[] masksDataByInstance = Arrays.copyOfRange(masksData, i*28*28, (i+1)*28*28);
         final byte[] pixels = new byte[28*28*4];
-        for (int j = 0; j < 28 * 28; j++) {
-          byte a = (byte) 0xff;
-
-          byte r;
-          byte g;
-          byte b;
-          if (masksDataByInstance[j] < 0.5) {
-            r = (byte) 0;
-            g = (byte) 0;
-            b = (byte) 0;
-          } else {
-            r = (byte) 0xff;
-            g = (byte) 0xff;
-            b = (byte) 0xff;
+        int offset = 0;
+        for (int j = masksDataByInstance.length; j >= 28; j -= 28) {
+          int end = j-1, start = j - 28 ;
+          for (int k = start; k <= end; k++) {
+            byte a;
+            byte r;
+            byte g;
+            byte b;
+            if (masksDataByInstance[k] < 0.5) {
+              r = (byte) 0;
+              g = (byte) 0;
+              b = (byte) 0;
+              a = (byte) 0xff;
+            } else {
+              r = (byte) 0xff;
+              g = (byte) 0xff;
+              b = (byte) 0xff;
+              a = (byte) 0xff;
+            }
+            pixels[4*offset+0] = r;
+            pixels[4*offset+1] = g;
+            pixels[4*offset+2] = b;
+            pixels[4*offset+3] = a;
+            offset += 1;
           }
-            pixels[4*j+0] = r;
-            pixels[4*j+1] = g;
-            pixels[4*j+2] = b;
-            pixels[4*j+3] = a;
         }
 
         final byte[] bmpHeader = addBMPImageHeader(pixels.length);
-        final byte[] bmpinfos = addBMPImageInfosHeader(28, 28);
-        byte[] dst = new byte[bmpHeader.length + bmpinfos.length + pixels.length];
+        final byte[] bmpInfos = addBMPImageInfosHeader(28, 28);
+        byte[] dst = new byte[bmpHeader.length + bmpInfos.length + pixels.length];
 
         System.arraycopy(bmpHeader, 0, dst, 0, bmpHeader.length);
-        System.arraycopy(bmpinfos, 0, dst, 14, bmpinfos.length);
+        System.arraycopy(bmpInfos, 0, dst, 14, bmpInfos.length);
         System.arraycopy(pixels, 0, dst, 54, pixels.length);
 
 

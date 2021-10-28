@@ -24,7 +24,6 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   List<RecognitionModel>? _recognitions;
   File? _selectedImage;
-  Uint8List? _segImage;
   final List<String> _imageList = ['test1.png', 'test2.jpeg', 'test3.png'];
   int _index = 0;
   int? _imageWidth;
@@ -83,7 +82,6 @@ class _MyAppState extends State<MyApp> {
 
     setState(() {
       _recognitions = recognitions;
-      _segImage = recognitions!.first.mask;
     });
   }
 
@@ -118,6 +116,17 @@ class _MyAppState extends State<MyApp> {
       final aspectRatio = _imageHeight! / _imageWidth! * screenWidth;
       final widthScale = screenWidth / _imageWidth!;
       final heightScale = aspectRatio / _imageHeight!;
+
+      stackChildren.addAll(_recognitions!.map(
+        (recognition) {
+          return RenderSegments(
+            imageWidthScale: widthScale,
+            imageHeightScale: heightScale,
+            recognition: recognition,
+          );
+        },
+      ).toList());
+
       stackChildren.addAll(_recognitions!.map(
         (recognition) {
           return RenderBoxes(
@@ -143,14 +152,6 @@ class _MyAppState extends State<MyApp> {
               children: stackChildren,
             ),
           ),
-          if (_segImage != null)
-            SizedBox(
-              width: 200,
-              child: Image.memory(
-                _segImage!,
-                fit: BoxFit.fill,
-              ),
-            ),
           const SizedBox(height: 48),
           MyButton(
             onPressed: detect,
@@ -261,6 +262,37 @@ class RenderBoxes extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class RenderSegments extends StatelessWidget {
+  const RenderSegments({
+    Key? key,
+    required this.recognition,
+    required this.imageWidthScale,
+    required this.imageHeightScale,
+  }) : super(key: key);
+
+  final RecognitionModel recognition;
+  final double imageWidthScale;
+  final double imageHeightScale;
+
+  @override
+  Widget build(BuildContext context) {
+    final left = recognition.rect.left * imageWidthScale;
+    final top = recognition.rect.top * imageHeightScale;
+    final right = recognition.rect.right * imageWidthScale;
+    final bottom = recognition.rect.bottom * imageHeightScale;
+    final mask = recognition.mask;
+    return Positioned(
+        left: left,
+        top: top,
+        width: right - left,
+        height: bottom - top,
+        child: Image.memory(
+          mask,
+          fit: BoxFit.fill,
+        ));
   }
 }
 
