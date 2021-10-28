@@ -12,9 +12,12 @@ import org.pytorch.Tensor;
 import org.pytorch.torchvision.TensorImageUtils;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
+import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -202,7 +205,32 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
         rect.put("bottom", boxesData[4 * i + 3] * imageHeightScale);
 
         output.put("rect", rect);
-        output.put("mask", Arrays.copyOfRange(masksData, i*28*28, (i+1)*28*28));
+
+        final float[] masksDataByInstance = Arrays.copyOfRange(masksData, i*28*28, (i+1)*28*28);
+        final byte[] pixels = new byte[28*28*4];
+        for (int j = 0; j < 28 * 28; j++) {
+          byte a = (byte) 0xff;
+          
+          byte r;
+          byte g;
+          byte b;
+          if (masksDataByInstance[j] < 0.5) {
+            r = (byte) 0xff;
+            g = (byte) 0xff;
+            b = (byte) 0xff;
+          } else {
+            r = (byte) 0;
+            g = (byte) 0;
+            b = (byte) 0;
+          }
+            pixels[4*j+0] = r;
+            pixels[4*j+1] = g;
+            pixels[4*j+2] = b;
+            pixels[4*j+3] = a;
+
+        }
+
+        output.put("mask", pixels);
         output.put("confidenceInClass", scoresData[i]);
         output.put("detectedClass", classes.get((int)(labelsData[i] - 1)));
 
