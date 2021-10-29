@@ -117,15 +117,17 @@ class _MyAppState extends State<MyApp> {
       final widthScale = screenWidth / _imageWidth!;
       final heightScale = aspectRatio / _imageHeight!;
 
-      stackChildren.addAll(_recognitions!.map(
-        (recognition) {
-          return RenderSegments(
-            imageWidthScale: widthScale,
-            imageHeightScale: heightScale,
-            recognition: recognition,
-          );
-        },
-      ).toList());
+      if (_recognitions!.first.mask != null) {
+        stackChildren.addAll(_recognitions!.map(
+          (recognition) {
+            return RenderSegments(
+              imageWidthScale: widthScale,
+              imageHeightScale: heightScale,
+              recognition: recognition,
+            );
+          },
+        ).toList());
+      }
 
       stackChildren.addAll(_recognitions!.map(
         (recognition) {
@@ -283,7 +285,7 @@ class RenderSegments extends StatelessWidget {
     final top = recognition.rect.top * imageHeightScale;
     final right = recognition.rect.right * imageWidthScale;
     final bottom = recognition.rect.bottom * imageHeightScale;
-    final mask = recognition.mask;
+    final mask = recognition.mask!;
     return Positioned(
         left: left,
         top: top,
@@ -304,7 +306,7 @@ class RecognitionModel {
     this.detectedClass,
   );
   Rectangle rect;
-  Uint8List mask;
+  Uint8List? mask;
   double confidenceInClass;
   String detectedClass;
 }

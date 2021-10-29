@@ -47,6 +47,8 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
   Module module;
   ArrayList<String> classes = new ArrayList<>();
 
+  final int rawMaskWidth = 28;
+
   private static final String CHANNEL_NAME = "tsubauaaa.com/flutter_d2go";
 
   @Override
@@ -114,9 +116,9 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
   private byte[] addBMPImageHeader(int size)
   {
     byte[]buffer = new byte[14];
-    buffer[0] = 0x42;//B
-    buffer[1] = 0x4D;//M
-    buffer[2] = (byte) (size >> 0);//调色板长度
+    buffer[0] = 0x42;
+    buffer[1] = 0x4D;
+    buffer[2] = (byte) size;
     buffer[3] = (byte) (size >> 8);
     buffer[4] = (byte) (size >> 16);
     buffer[5] = (byte) (size >> 24);
@@ -137,17 +139,17 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
     buffer[1] = 0x00;
     buffer[2] = 0x00;
     buffer[3] = 0x00;
-    buffer[4] = (byte) (w >> 0);//宽度
+    buffer[4] = (byte) w;
     buffer[5] = (byte) (w >> 8);
     buffer[6] = (byte) (w >> 16);
     buffer[7] = (byte) (w >> 24);
-    buffer[8] = (byte) (h >> 0);//高度
+    buffer[8] = (byte) h;
     buffer[9] = (byte) (h >> 8);
     buffer[10] = (byte) (h >> 16);
     buffer[11] = (byte) (h >> 24);
     buffer[12] = 0x01;
     buffer[13] = 0x00;
-    buffer[14] = 32;//bmp位数
+    buffer[14] = 32;
     buffer[15] = 0x00;
     buffer[16] = 0x00;
     buffer[17] = 0x00;
@@ -232,24 +234,19 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
 
     final Map<String, IValue> map = outputTuple[1].toList()[0].toDictStringKey();
 
-    float[] boxesData;
-    float[] scoresData;
-    long[] labelsData;
-    float[] masksData;
-
     // Formatting inference results
     if (map.containsKey("boxes")) {
       final Tensor boxesTensor = map.get("boxes").toTensor();
       final Tensor scoresTensor = map.get("scores").toTensor();
       final Tensor labelsTensor = map.get("labels").toTensor();
-      final Tensor masksTensor = map.get("masks").toTensor();
+      final Tensor rawMasksTensor = map.containsKey("masks") ? map.get("masks").toTensor() : null;
 
       // [boxesData] has 4 sets of left, top, right and bottom per instance
       // boxesData = [left1, top1, right1, bottom1, left2, top2, right2, bottom2, left3, top3, ..., bottomN]
-      boxesData = boxesTensor.getDataAsFloatArray();
-      scoresData = scoresTensor.getDataAsFloatArray();
-      labelsData = labelsTensor.getDataAsLongArray();
-      masksData = masksTensor.getDataAsFloatArray();
+      final float[] boxesData = boxesTensor.getDataAsFloatArray();
+      final float[] scoresData = scoresTensor.getDataAsFloatArray();
+      final long[] labelsData = labelsTensor.getDataAsLongArray();
+      final float[] rawMasksData = rawMasksTensor != null ?  rawMasksTensor.getDataAsFloatArray() : null;
 
       // Inferred number of all instances
       final int totalInstances = scoresData.length;
@@ -269,45 +266,10 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
 
         output.put("rect", rect);
 
-        final float[] masksDataByInstance = Arrays.copyOfRange(masksData, i*28*28, (i+1)*28*28);
-        final byte[] pixels = new byte[28*28*4];
-        int offset = 0;
-        for (int j = masksDataByInstance.length; j >= 28; j -= 28) {
-          int end = j-1, start = j - 28 ;
-          for (int k = start; k <= end; k++) {
-            byte a;
-            byte r;
-            byte g;
-            byte b;
-            if (masksDataByInstance[k] < 0.5) {
-              r = (byte) 0;
-              g = (byte) 0;
-              b = (byte) 0;
-              a = (byte) 0xff;
-            } else {
-              r = (byte) 0xff;
-              g = (byte) 0xff;
-              b = (byte) 0xff;
-              a = (byte) 0xff;
-            }
-            pixels[4*offset+0] = r;
-            pixels[4*offset+1] = g;
-            pixels[4*offset+2] = b;
-            pixels[4*offset+3] = a;
-            offset += 1;
-          }
+        if (rawMasksData != null) {
+          output.put("mask", getMaskBytes(rawMasksData, i));
         }
 
-        final byte[] bmpHeader = addBMPImageHeader(pixels.length);
-        final byte[] bmpInfos = addBMPImageInfosHeader(28, 28);
-        byte[] dst = new byte[bmpHeader.length + bmpInfos.length + pixels.length];
-
-        System.arraycopy(bmpHeader, 0, dst, 0, bmpHeader.length);
-        System.arraycopy(bmpInfos, 0, dst, 14, bmpInfos.length);
-        System.arraycopy(pixels, 0, dst, 54, pixels.length);
-
-
-        output.put("mask", dst);
         output.put("confidenceInClass", scoresData[i]);
         output.put("detectedClass", classes.get((int)(labelsData[i] - 1)));
 
@@ -315,6 +277,48 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
       }
       result.success(outputs);
     }
+  }
+
+  private byte[] getMaskBytes(float[] rawMasksData, int instanceIndex) {
+    final float[] rawMask = Arrays.copyOfRange(rawMasksData, instanceIndex * rawMaskWidth * rawMaskWidth, (instanceIndex + 1) * rawMaskWidth * rawMaskWidth);
+    final int ch = 4;
+    final byte[] pixels = new byte[rawMaskWidth * rawMaskWidth * ch];
+    int offset = 0;
+    for (int j = rawMask.length; j >= rawMaskWidth; j -= rawMaskWidth) {
+      int end = j - 1, start = j - rawMaskWidth;
+      for (int k = start; k <= end; k++) {
+        int a;
+        int r;
+        int g;
+        int b;
+        if (rawMask[k] < 0.5) {
+          b = 0;
+          g = 0;
+          r = 0;
+          a = 255;
+        } else {
+          b = 0;
+          g = 0;
+          r = 255;
+          a = 0;
+        }
+        pixels[ch * offset + 0] = (byte) (b & 0xff);
+        pixels[ch * offset + 1] = (byte) (g & 0xff);
+        pixels[ch * offset + 2] = (byte) (r & 0xff);
+        pixels[ch * offset + 3] = (byte) (a & 0xff);
+        offset += 1;
+      }
+    }
+
+    final byte[] bmpHeader = addBMPImageHeader(pixels.length);
+    final byte[] bmpInfos = addBMPImageInfosHeader(rawMaskWidth, rawMaskWidth);
+    byte[] maskBytes = new byte[bmpHeader.length + bmpInfos.length + pixels.length];
+
+    System.arraycopy(bmpHeader, 0, maskBytes, 0, bmpHeader.length);
+    System.arraycopy(bmpInfos, 0, maskBytes, bmpHeader.length, bmpInfos.length);
+    System.arraycopy(pixels, 0, maskBytes, bmpHeader.length + bmpInfos.length, pixels.length);
+
+    return maskBytes;
   }
 
   /**
