@@ -64,20 +64,33 @@ class _MyAppState extends State<MyApp> {
     );
     List<RecognitionModel>? recognitions;
     if (predictions.isNotEmpty) {
-      recognitions = predictions
-          .map(
-            (e) => RecognitionModel(
-                Rectangle(
-                  e['rect']['left'],
-                  e['rect']['top'],
-                  e['rect']['right'],
-                  e['rect']['bottom'],
-                ),
-                e['mask'],
-                e['confidenceInClass'],
-                e['detectedClass']),
-          )
-          .toList();
+      recognitions = predictions.map(
+        (e) {
+          // Bitmap bitmap = Bitmap.fromHeadless(
+          //     28, 28, (e['mask'] as Uint8List).sublist(122));
+          // Uint8List headedBitmap = bitmap.buildHeaded();
+
+          // for (int i = 0; i < headedBitmap.length; i++) {
+          //   if ((e['mask'] as Uint8List)[i] != headedBitmap[i]) {
+          //     debugPrint((e['mask'] as Uint8List)[i].toString());
+          //     debugPrint(headedBitmap[i].toString());
+          //     debugPrint(i.toString());
+          //   }
+          // }
+
+          return RecognitionModel(
+              Rectangle(
+                e['rect']['left'],
+                e['rect']['top'],
+                e['rect']['right'],
+                e['rect']['bottom'],
+              ),
+              e['mask'],
+              // headedBitmap,
+              e['confidenceInClass'],
+              e['detectedClass']);
+        },
+      ).toList();
     }
 
     setState(() {
@@ -287,14 +300,15 @@ class RenderSegments extends StatelessWidget {
     final bottom = recognition.rect.bottom * imageHeightScale;
     final mask = recognition.mask!;
     return Positioned(
-        left: left,
-        top: top,
-        width: right - left,
-        height: bottom - top,
-        child: Image.memory(
-          mask,
-          fit: BoxFit.fill,
-        ));
+      left: left,
+      top: top,
+      width: right - left,
+      height: bottom - top,
+      child: Image.memory(
+        mask,
+        fit: BoxFit.fill,
+      ),
+    );
   }
 }
 

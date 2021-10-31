@@ -116,55 +116,62 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
   private byte[] addBMPImageHeader(int size)
   {
     byte[]buffer = new byte[14];
+    // BM
     buffer[0] = 0x42;
     buffer[1] = 0x4D;
-    buffer[2] = (byte) size;
-    buffer[3] = (byte) (size >> 8);
-    buffer[4] = (byte) (size >> 16);
-    buffer[5] = (byte) (size >> 24);
+
+    // Header size
+    buffer[2] = (byte) (186 & 0xff);
+    buffer[3] = (byte) (12 & 0xff);
+    buffer[4] = 0x00;
+    buffer[5] = 0x00;
+
+    // Hot spot
     buffer[6] = 0x00;
     buffer[7] = 0x00;
     buffer[8] = 0x00;
     buffer[9] = 0x00;
-    buffer[10] = 0x36;
+
+    // Offset 122
+    buffer[10] = (byte) (122 & 0xff);
     buffer[11] = 0x00;
     buffer[12] = 0x00;
     buffer[13] = 0x00;
     return buffer;
   }
 
-  private byte[] addBMPImageInfosHeader(int w, int h) {
-    byte[] buffer = new byte[40];
-    buffer[0] = 0x28;
+  private byte[] addBMPImageInfoHeader(int w, int h) {
+    byte[] buffer = new byte[108];
+    buffer[0] = (byte) (108 & 0xff);
     buffer[1] = 0x00;
     buffer[2] = 0x00;
     buffer[3] = 0x00;
-    buffer[4] = (byte) w;
-    buffer[5] = (byte) (w >> 8);
-    buffer[6] = (byte) (w >> 16);
-    buffer[7] = (byte) (w >> 24);
-    buffer[8] = (byte) h;
-    buffer[9] = (byte) (h >> 8);
-    buffer[10] = (byte) (h >> 16);
-    buffer[11] = (byte) (h >> 24);
+    buffer[4] = (byte) (w & 0xff);
+    buffer[5] = 0x00;
+    buffer[6] = 0x00;
+    buffer[7] = 0x00;
+    buffer[8] = (byte) (byte) (228 & 0xff);
+    buffer[9] = (byte) (255 & 0xff);
+    buffer[10] = (byte) (255 & 0xff);
+    buffer[11] = (byte) (255 & 0xff);
     buffer[12] = 0x01;
     buffer[13] = 0x00;
-    buffer[14] = 32;
+    buffer[14] = (byte) (32 & 0xff);
     buffer[15] = 0x00;
-    buffer[16] = 0x00;
+    buffer[16] = (byte) (3 & 0xff);
     buffer[17] = 0x00;
     buffer[18] = 0x00;
     buffer[19] = 0x00;
-    buffer[20] = 0x00;
-    buffer[21] = 0x00;
+    buffer[20] = (byte) (64 & 0xff);
+    buffer[21] = (byte) (12 & 0xff);
     buffer[22] = 0x00;
     buffer[23] = 0x00;
-    buffer[24] = (byte) 0xE0;
-    buffer[25] = 0x01;
+    buffer[24] = 0x00;
+    buffer[25] = 0x00;
     buffer[26] = 0x00;
     buffer[27] = 0x00;
-    buffer[28] = 0x02;
-    buffer[29] = 0x03;
+    buffer[28] = 0x00;
+    buffer[29] = 0x00;
     buffer[30] = 0x00;
     buffer[31] = 0x00;
     buffer[32] = 0x00;
@@ -175,6 +182,74 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
     buffer[37] = 0x00;
     buffer[38] = 0x00;
     buffer[39] = 0x00;
+    buffer[40] = (byte) (255 & 0xff);
+    buffer[41] = 0x00;
+    buffer[42] = 0x00;
+    buffer[43] = 0x00;
+    buffer[44] = 0x00;
+    buffer[45] = (byte) (255 & 0xff);
+    buffer[46] = 0x00;
+    buffer[47] = 0x00;
+    buffer[48] = 0x00;
+    buffer[49] = 0x00;
+    buffer[50] = (byte) (255 & 0xff);
+    buffer[51] = 0x00;
+    buffer[52] = 0x00;
+    buffer[53] = 0x00;
+    buffer[54] = 0x00;
+    buffer[55] = (byte) (255 & 0xff);
+    buffer[56] = 0x00;
+    buffer[57] = 0x00;
+    buffer[58] = 0x00;
+    buffer[59] = 0x00;
+    buffer[60] = 0x00;
+    buffer[61] = 0x00;
+    buffer[62] = 0x00;
+    buffer[63] = 0x00;
+    buffer[64] = 0x00;
+    buffer[65] = 0x00;
+    buffer[66] = 0x00;
+    buffer[67] = 0x00;
+    buffer[68] = 0x00;
+    buffer[69] = 0x00;
+    buffer[70] = 0x00;
+    buffer[71] = 0x00;
+    buffer[72] = 0x00;
+    buffer[73] = 0x00;
+    buffer[74] = 0x00;
+    buffer[75] = 0x00;
+    buffer[76] = 0x00;
+    buffer[77] = 0x00;
+    buffer[78] = 0x00;
+    buffer[79] = 0x00;
+    buffer[80] = 0x00;
+    buffer[81] = 0x00;
+    buffer[82] = 0x00;
+    buffer[83] = 0x00;
+    buffer[84] = 0x00;
+    buffer[85] = 0x00;
+    buffer[86] = 0x00;
+    buffer[87] = 0x00;
+    buffer[88] = 0x00;
+    buffer[89] = 0x00;
+    buffer[90] = 0x00;
+    buffer[91] = 0x00;
+    buffer[92] = 0x00;
+    buffer[93] = 0x00;
+    buffer[94] = 0x00;
+    buffer[95] = 0x00;
+    buffer[96] = 0x00;
+    buffer[97] = 0x00;
+    buffer[98] = 0x00;
+    buffer[99] = 0x00;
+    buffer[100] = 0x00;
+    buffer[101] = 0x00;
+    buffer[102] = 0x00;
+    buffer[103] = 0x00;
+    buffer[104] = 0x00;
+    buffer[105] = 0x00;
+    buffer[106] = 0x00;
+    buffer[107] = 0x00;
     return buffer;
   }
 
@@ -283,40 +358,36 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
     final float[] rawMask = Arrays.copyOfRange(rawMasksData, instanceIndex * rawMaskWidth * rawMaskWidth, (instanceIndex + 1) * rawMaskWidth * rawMaskWidth);
     final int ch = 4;
     final byte[] pixels = new byte[rawMaskWidth * rawMaskWidth * ch];
-    int offset = 0;
-    for (int j = rawMask.length; j >= rawMaskWidth; j -= rawMaskWidth) {
-      int end = j - 1, start = j - rawMaskWidth;
-      for (int k = start; k <= end; k++) {
-        int a;
+
+    for (int i = 0; i < rawMaskWidth * rawMaskWidth; i++) {
         int r;
         int g;
         int b;
-        if (rawMask[k] < 0.5) {
-          b = 0;
-          g = 0;
+        int a;
+        if (rawMask[i] < 0.5) {
           r = 0;
-          a = 255;
-        } else {
-          b = 0;
           g = 0;
-          r = 255;
+          b = 0;
           a = 0;
+        } else {
+          r = 255;
+          g = 0;
+          b = 0;
+          a = 128;
         }
-        pixels[ch * offset + 0] = (byte) (b & 0xff);
-        pixels[ch * offset + 1] = (byte) (g & 0xff);
-        pixels[ch * offset + 2] = (byte) (r & 0xff);
-        pixels[ch * offset + 3] = (byte) (a & 0xff);
-        offset += 1;
-      }
+      pixels[ch * i + 0] = (byte) (r & 0xff);
+      pixels[ch * i + 1] = (byte) (g & 0xff);
+      pixels[ch * i + 2] = (byte) (b & 0xff);
+      pixels[ch * i + 3] = (byte) (a & 0xff);
     }
 
     final byte[] bmpHeader = addBMPImageHeader(pixels.length);
-    final byte[] bmpInfos = addBMPImageInfosHeader(rawMaskWidth, rawMaskWidth);
-    byte[] maskBytes = new byte[bmpHeader.length + bmpInfos.length + pixels.length];
+    final byte[] bmpInfo = addBMPImageInfoHeader(rawMaskWidth, rawMaskWidth);
+    byte[] maskBytes = new byte[bmpHeader.length + bmpInfo.length + pixels.length];
 
     System.arraycopy(bmpHeader, 0, maskBytes, 0, bmpHeader.length);
-    System.arraycopy(bmpInfos, 0, maskBytes, bmpHeader.length, bmpInfos.length);
-    System.arraycopy(pixels, 0, maskBytes, bmpHeader.length + bmpInfos.length, pixels.length);
+    System.arraycopy(bmpInfo, 0, maskBytes, bmpHeader.length, bmpInfo.length);
+    System.arraycopy(pixels, 0, maskBytes, bmpHeader.length + bmpInfo.length, pixels.length);
 
     return maskBytes;
   }
