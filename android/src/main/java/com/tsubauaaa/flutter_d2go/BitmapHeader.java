@@ -1,10 +1,21 @@
 package com.tsubauaaa.flutter_d2go;
 
+/**
+ * <p>BitmapHeader</>
+ * This class is a class that infers using the d2go model
+ */
 public class BitmapHeader {
 
+    // Bitfile file header size and info header size
+    //  @see <a href="https://en.wikipedia.org/wiki/BMP_file_format#Bitmap_file_header">https://en.wikipedia.org/wiki/BMP_file_format#Bitmap_file_header</a>
     final private static int fileHeaderSize = 14;
     final private static int infoHeaderSize = 108;
-    
+
+
+    /**
+     * Create a bitmap file header and return it with byte []
+     * @return bitmap file header byte array
+     */
     public static byte[] getBMPFileHeader()
     {
         byte[]buffer = new byte[14];
@@ -33,6 +44,10 @@ public class BitmapHeader {
         return buffer;
     }
 
+    /**
+     * Create a bitmap info header (BITMAPV4HEADER) and return it with byte []
+     * @return bitmap file header byte array
+     */
     public static byte[] getBMPInfoHeader(int w, int h) {
         byte[] buffer = new byte[infoHeaderSize];
 

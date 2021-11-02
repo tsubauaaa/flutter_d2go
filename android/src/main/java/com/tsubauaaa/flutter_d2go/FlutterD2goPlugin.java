@@ -31,7 +31,10 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.PluginRegistry;
 
-/** FlutterD2goPlugin */
+/**
+ * <p>FlutterD2goPlugin</>
+ * This class is a class that infers using the d2go model
+ */
 public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
 
   // Dealing with torchvision options problem
