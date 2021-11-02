@@ -66,18 +66,6 @@ class _MyAppState extends State<MyApp> {
     if (predictions.isNotEmpty) {
       recognitions = predictions.map(
         (e) {
-          // Bitmap bitmap = Bitmap.fromHeadless(
-          //     28, 28, (e['mask'] as Uint8List).sublist(122));
-          // Uint8List headedBitmap = bitmap.buildHeaded();
-
-          // for (int i = 0; i < headedBitmap.length; i++) {
-          //   if ((e['mask'] as Uint8List)[i] != headedBitmap[i]) {
-          //     debugPrint((e['mask'] as Uint8List)[i].toString());
-          //     debugPrint(headedBitmap[i].toString());
-          //     debugPrint(i.toString());
-          //   }
-          // }
-
           return RecognitionModel(
               Rectangle(
                 e['rect']['left'],
@@ -86,7 +74,6 @@ class _MyAppState extends State<MyApp> {
                 e['rect']['bottom'],
               ),
               e['mask'],
-              // headedBitmap,
               e['confidenceInClass'],
               e['detectedClass']);
         },
