@@ -6,7 +6,7 @@ package com.tsubauaaa.flutter_d2go;
  */
 public class BitmapHeader {
 
-    // Bitfile file header size and info header size
+    // Bitmap file header size and info header size
     //  @see <a href="https://en.wikipedia.org/wiki/BMP_file_format#Bitmap_file_header">https://en.wikipedia.org/wiki/BMP_file_format#Bitmap_file_header</a>
     final private static int fileHeaderSize = 14;
     final private static int infoHeaderSize = 108;
@@ -114,28 +114,28 @@ public class BitmapHeader {
         buffer[39] = 0x00;
 
         // Red component color mask
-        buffer[40] = (byte) (255 & 0xff);
+        buffer[40] = (byte) 0xff;
         buffer[41] = 0x00;
         buffer[42] = 0x00;
         buffer[43] = 0x00;
 
         // Green component color mask
         buffer[44] = 0x00;
-        buffer[45] = (byte) (255 & 0xff);
+        buffer[45] = (byte) (0xff);
         buffer[46] = 0x00;
         buffer[47] = 0x00;
 
         // Blue component color mask
         buffer[48] = 0x00;
         buffer[49] = 0x00;
-        buffer[50] = (byte) (255 & 0xff);
+        buffer[50] = (byte) (0xff);
         buffer[51] = 0x00;
 
         // Alpha component color mask
         buffer[52] = 0x00;
         buffer[53] = 0x00;
         buffer[54] = 0x00;
-        buffer[55] = (byte) (255 & 0xff);
+        buffer[55] = (byte) (0xff);
 
         // CIEXYZTRIPLE structure
         buffer[56] = 0x00;
