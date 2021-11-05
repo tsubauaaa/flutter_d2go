@@ -69,7 +69,7 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
   }
 
   @Override
-  public void onMethodCall(MethodCall call, final Result result) {
+  public void onMethodCall(MethodCall call, @NonNull final Result result) {
     switch (call.method) {
       case "loadModel":
         loadModel(call, result);
@@ -196,7 +196,7 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
         Map<String, Float> rect = new LinkedHashMap<>();
 
         // Set rect to a value that matches the original image
-        rect.put("left", boxesData[4 * i + 0] * imageWidthScale);
+        rect.put("left", boxesData[4 * i] * imageWidthScale);
         rect.put("top", boxesData[4 * i + 1] * imageHeightScale);
         rect.put("right", boxesData[4 * i + 2] * imageWidthScale);
         rect.put("bottom", boxesData[4 * i + 3] * imageHeightScale);
@@ -240,7 +240,7 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
           b = 0;
           a = 128;
         }
-        pixels[ch * offset + 0] = (byte) (r & 0xff);
+        pixels[ch * offset] = (byte) (r & 0xff);
         pixels[ch * offset + 1] = (byte) (g & 0xff);
         pixels[ch * offset + 2] = (byte) (b & 0xff);
         pixels[ch * offset + 3] = (byte) (a & 0xff);
