@@ -7,7 +7,7 @@ package com.tsubauaaa.flutter_d2go;
 public class BitmapHeader {
 
     // Bitmap file header size and info header size
-    //  @see <a href="https://en.wikipedia.org/wiki/BMP_file_format#Bitmap_file_header">https://en.wikipedia.org/wiki/BMP_file_format#Bitmap_file_header</a>
+    // @see <a href="https://en.wikipedia.org/wiki/BMP_file_format#Bitmap_file_header">https://en.wikipedia.org/wiki/BMP_file_format#Bitmap_file_header</a>
     final private static int fileHeaderSize = 14;
     final private static int infoHeaderSize = 108;
 

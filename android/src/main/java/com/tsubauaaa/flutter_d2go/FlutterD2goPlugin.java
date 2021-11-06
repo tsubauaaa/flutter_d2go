@@ -38,7 +38,7 @@ import io.flutter.plugin.common.PluginRegistry;
 public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
 
   // Dealing with torchvision options problem
-  // Refer to <a href="https://discuss.pytorch.org/t/torchvision-ops-nms-on-android-mobile/81017/6">https://discuss.pytorch.org/t/torchvision-ops-nms-on-android-mobile/81017/6</a>
+  // @see <a href="https://discuss.pytorch.org/t/torchvision-ops-nms-on-android-mobile/81017/6">https://discuss.pytorch.org/t/torchvision-ops-nms-on-android-mobile/81017/6</a>
   static {
     if (!NativeLoader.isInitialized()) {
       NativeLoader.init(new SystemDelegate());
@@ -180,6 +180,8 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
 
       // [boxesData] has 4 sets of left, top, right and bottom per instance
       // boxesData = [left1, top1, right1, bottom1, left2, top2, right2, bottom2, left3, top3, ..., bottomN]
+      // [rawMaskData] is the instance mask data in the bounding box and has a size of 28 * 28
+      // @see <a href="https://github.com/facebookresearch/detectron2/discussions/3393">https://github.com/facebookresearch/detectron2/discussions/3393</a>
       final float[] boxesData = boxesTensor.getDataAsFloatArray();
       final float[] scoresData = scoresTensor.getDataAsFloatArray();
       final long[] labelsData = labelsTensor.getDataAsLongArray();
@@ -216,14 +218,26 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
     }
   }
 
+  /**
+   * <p>Converts mask data to byte array of bitmap image and returns</>
+   * @param rawMasksData Mask data included in the inference result.
+   * @param instanceIndex Inferred instance number
+   * @return bitmap image byte array
+   */
   private byte[] getMaskBytes(float[] rawMasksData, int instanceIndex) {
+    // rawMasksData contains 28 * 28 mask data for the number of instances
     final float[] rawMask = Arrays.copyOfRange(rawMasksData, instanceIndex * rawMaskWidth * rawMaskWidth, (instanceIndex + 1) * rawMaskWidth * rawMaskWidth);
+
+    // color channel (RGBA)
     final int ch = 4;
+
     final byte[] pixels = new byte[rawMaskWidth * rawMaskWidth * ch];
-    
+
+    // The pixel of the bitmap image to be used is saved from bottom to top in the vertical direction.
+    // @see <a href="https://en.wikipedia.org/wiki/BMP_file_format#Pixel_array_(bitmap_data)">https://en.wikipedia.org/wiki/BMP_file_format#Pixel_array_(bitmap_data)</a>
     int offset = 0;
-    for (int j = rawMask.length; j >= rawMaskWidth; j -= rawMaskWidth) {
-      int end = j - 1, start = j - rawMaskWidth;
+    for (int i = rawMask.length; i >= rawMaskWidth; i -= rawMaskWidth) {
+      int end = i - 1, start = i - rawMaskWidth;
       for (int k = start; k <= end; k++) {
         int r;
         int g;
@@ -247,6 +261,8 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
         offset += 1;
       }
     }
+
+    // Concatenate pixels and bitmap headers
     final byte[] bmpFileHeader = BitmapHeader.getBMPFileHeader();
     final byte[] bmpInfoHeader = BitmapHeader.getBMPInfoHeader(rawMaskWidth, rawMaskWidth);
     byte[] maskBytes = new byte[bmpFileHeader.length + bmpInfoHeader.length + pixels.length];
