@@ -59,7 +59,7 @@ List<Map<String, dynamic>> predictions = await FlutterD2go.getImagePrediction(
 
 `rect` is the scale of the original image.
 `mask` depends on whether the d2go model has masks.
-
+If there are masks, the mask will be a Uint8List of bitmap images.
 ```dart
 [
   {
