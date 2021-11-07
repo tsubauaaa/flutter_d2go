@@ -63,16 +63,16 @@ If there are masks, the mask will be a Uint8List of bitmap images.
 ```dart
 [
   {
-    rect: {
-      left: 74.65713500976562,
-      top: 76.94147491455078,
-      right: 350.64324951171875,
-      bottom: 323.0279846191406
+    "rect": {
+      "left": 74.65713500976562,
+      "top": 76.94147491455078,
+      "right": 350.64324951171875,
+      "bottom": 323.0279846191406
     },
-    mask: [66, 77, 122, 0, 0, 0, 0, 0, 0, 0, 122, ...]
-    confidenceInClass: 0.985002338886261,
-    detectedClass: bicycle
-  },
-  ...
+    "mask": [66, 77, 122, 0, 0, 0, 0, 0, 0, 0, 122, ...]
+    "confidenceInClass": 0.985002338886261,
+    "detectedClass": "bicycle"
+  }, // For each instance
+...
 ]
 ```
