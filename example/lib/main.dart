@@ -60,7 +60,7 @@ class _MyAppState extends State<MyApp> {
     _imageHeight = decodedImage.height;
     final predictions = await FlutterD2go.getImagePrediction(
       image: image,
-      minScore: 0.7,
+      minScore: 0.5,
     );
     List<RecognitionModel>? recognitions;
     if (predictions.isNotEmpty) {
