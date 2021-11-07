@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import androidx.annotation.NonNull;
 
@@ -30,6 +31,7 @@ import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.PluginRegistry;
+
 
 /**
  * <p>FlutterD2goPlugin</>
@@ -54,6 +56,7 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
 
   private static final String CHANNEL_NAME = "tsubauaaa.com/flutter_d2go";
 
+
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
     final MethodChannel channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(),
@@ -67,6 +70,7 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
     final MethodChannel channel = new MethodChannel(register.messenger(), CHANNEL_NAME);
     channel.setMethodCallHandler(new FlutterD2goPlugin());
   }
+
 
   @Override
   public void onMethodCall(MethodCall call, @NonNull final Result result) {
@@ -84,6 +88,7 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
         break;
     }
   }
+
 
   /**
    * <p>Load the d2go model and get org.pytorch.Module in [module]. Read the classes file and add classes to [classes]</>
@@ -115,6 +120,7 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
     }
   }
 
+
   /**
    * <p>Infer using the D2Go model, format the result and return it</>
    *
@@ -126,6 +132,7 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
    *             [minScore] threshold
    * @param result If successful, return [outputs] with result.success
    *               The format of [outputs] is List of { "rect": { "left": Float, "top": Float, "right": Float, "bottom": Float },
+   *               "mask": [66, 77, 122, 0, 0, 0, 0, 0, 0, 0, 122, 0, 0, 0, 108, 0, 0, 0, 28, ...],
    *               "confidenceInClass": Float, "detectedClass": String }
    */
   private void predictImage(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
@@ -173,19 +180,17 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
 
     // Formatting inference results
     if (map.containsKey("boxes")) {
+      final boolean hasMasks = map.containsKey("masks");
+
       final Tensor boxesTensor = map.get("boxes").toTensor();
       final Tensor scoresTensor = map.get("scores").toTensor();
       final Tensor labelsTensor = map.get("labels").toTensor();
-      final Tensor rawMasksTensor = map.containsKey("masks") ? map.get("masks").toTensor() : null;
 
       // [boxesData] has 4 sets of left, top, right and bottom per instance
       // boxesData = [left1, top1, right1, bottom1, left2, top2, right2, bottom2, left3, top3, ..., bottomN]
-      // [rawMaskData] is the instance mask data in the bounding box and has a size of 28 * 28
-      // @see <a href="https://github.com/facebookresearch/detectron2/discussions/3393">https://github.com/facebookresearch/detectron2/discussions/3393</a>
       final float[] boxesData = boxesTensor.getDataAsFloatArray();
       final float[] scoresData = scoresTensor.getDataAsFloatArray();
       final long[] labelsData = labelsTensor.getDataAsLongArray();
-      final float[] rawMasksData = rawMasksTensor != null ?  rawMasksTensor.getDataAsFloatArray() : null;
 
       // Inferred number of all instances
       final int totalInstances = scoresData.length;
@@ -205,18 +210,25 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
 
         output.put("rect", rect);
 
-        if (rawMasksData != null) {
+        if (hasMasks) {
+          // [rawMaskData] is the instance mask data in the bounding box and has a size of 28 * 28
+          // @see <a href="https://github.com/facebookresearch/detectron2/discussions/3393">https://github.com/facebookresearch/detectron2/discussions/3393</a>
+          final Tensor rawMasksTensor = map.get("masks").toTensor();
+          final float[] rawMasksData = rawMasksTensor.getDataAsFloatArray();
           output.put("mask", getMaskBytes(rawMasksData, i));
         }
+
 
         output.put("confidenceInClass", scoresData[i]);
         output.put("detectedClass", classes.get((int)(labelsData[i] - 1)));
 
         outputs.add(output);
       }
+
       result.success(outputs);
     }
   }
+
 
   /**
    * <p>Converts mask data to byte array of bitmap image and returns</>
@@ -233,27 +245,22 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
 
     final byte[] pixels = new byte[rawMaskWidth * rawMaskWidth * ch];
 
+    // Change the color of the mask image for each instance
+    Random rand = new Random();
+    final int r = rand.nextInt(255);
+    final int g = rand.nextInt(255);
+    final int b = rand.nextInt(255);
+
+
     // The pixel of the bitmap image to be used is saved from bottom to top in the vertical direction.
     // @see <a href="https://en.wikipedia.org/wiki/BMP_file_format#Pixel_array_(bitmap_data)">https://en.wikipedia.org/wiki/BMP_file_format#Pixel_array_(bitmap_data)</a>
     int offset = 0;
     for (int i = rawMask.length; i >= rawMaskWidth; i -= rawMaskWidth) {
       int end = i - 1, start = i - rawMaskWidth;
-      for (int k = start; k <= end; k++) {
-        int r;
-        int g;
-        int b;
-        int a;
-        if (rawMask[k] < 0.5) {
-          r = 0;
-          g = 0;
-          b = 0;
-          a = 0;
-        } else {
-          r = 255;
-          g = 0;
-          b = 0;
-          a = 128;
-        }
+      for (int j = start; j <= end; j++) {
+        // Since the masks output of the d2go model assumes 28 * 28 raw data, the mask range is 0.5 or more.
+        // @see <a href="https://detectron2.readthedocs.io/en/latest/tutorials/deployment.html#use-the-model-in-c-python">https://detectron2.readthedocs.io/en/latest/tutorials/deployment.html#use-the-model-in-c-python</a>
+        final int a = rawMask[j] < 0.5 ? 0 : 128;
         pixels[ch * offset] = (byte) (r & 0xff);
         pixels[ch * offset + 1] = (byte) (g & 0xff);
         pixels[ch * offset + 2] = (byte) (b & 0xff);
