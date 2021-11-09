@@ -16,9 +16,11 @@ import java.io.File;
 import java.io.FileReader;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import androidx.annotation.NonNull;
 
@@ -30,11 +32,15 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.PluginRegistry;
 
-/** FlutterD2goPlugin */
+
+/**
+ * <p>FlutterD2goPlugin</>
+ * This class is a class that infers using the d2go model
+ */
 public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
 
   // Dealing with torchvision options problem
-  // Refer to <a href="https://discuss.pytorch.org/t/torchvision-ops-nms-on-android-mobile/81017/6">https://discuss.pytorch.org/t/torchvision-ops-nms-on-android-mobile/81017/6</a>
+  // @see <a href="https://discuss.pytorch.org/t/torchvision-ops-nms-on-android-mobile/81017/6">https://discuss.pytorch.org/t/torchvision-ops-nms-on-android-mobile/81017/6</a>
   static {
     if (!NativeLoader.isInitialized()) {
       NativeLoader.init(new SystemDelegate());
@@ -46,7 +52,10 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
   Module module;
   ArrayList<String> classes = new ArrayList<>();
 
+  final int rawMaskWidth = 28;
+
   private static final String CHANNEL_NAME = "tsubauaaa.com/flutter_d2go";
+
 
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
@@ -62,8 +71,9 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
     channel.setMethodCallHandler(new FlutterD2goPlugin());
   }
 
+
   @Override
-  public void onMethodCall(MethodCall call, final Result result) {
+  public void onMethodCall(MethodCall call, @NonNull final Result result) {
     switch (call.method) {
       case "loadModel":
         loadModel(call, result);
@@ -78,6 +88,7 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
         break;
     }
   }
+
 
   /**
    * <p>Load the d2go model and get org.pytorch.Module in [module]. Read the classes file and add classes to [classes]</>
@@ -109,6 +120,7 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
     }
   }
 
+
   /**
    * <p>Infer using the D2Go model, format the result and return it</>
    *
@@ -120,6 +132,7 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
    *             [minScore] threshold
    * @param result If successful, return [outputs] with result.success
    *               The format of [outputs] is List of { "rect": { "left": Float, "top": Float, "right": Float, "bottom": Float },
+   *               "mask": [66, 77, 122, 0, 0, 0, 0, 0, 0, 0, 122, 0, 0, 0, 108, 0, 0, 0, 28, ...],
    *               "confidenceInClass": Float, "detectedClass": String }
    */
   private void predictImage(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
@@ -165,21 +178,19 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
 
     final Map<String, IValue> map = outputTuple[1].toList()[0].toDictStringKey();
 
-    float[] boxesData;
-    float[] scoresData;
-    long[] labelsData;
-
     // Formatting inference results
     if (map.containsKey("boxes")) {
+      final boolean hasMasks = map.containsKey("masks");
+
       final Tensor boxesTensor = map.get("boxes").toTensor();
       final Tensor scoresTensor = map.get("scores").toTensor();
       final Tensor labelsTensor = map.get("labels").toTensor();
 
       // [boxesData] has 4 sets of left, top, right and bottom per instance
       // boxesData = [left1, top1, right1, bottom1, left2, top2, right2, bottom2, left3, top3, ..., bottomN]
-      boxesData = boxesTensor.getDataAsFloatArray();
-      scoresData = scoresTensor.getDataAsFloatArray();
-      labelsData = labelsTensor.getDataAsLongArray();
+      final float[] boxesData = boxesTensor.getDataAsFloatArray();
+      final float[] scoresData = scoresTensor.getDataAsFloatArray();
+      final long[] labelsData = labelsTensor.getDataAsLongArray();
 
       // Inferred number of all instances
       final int totalInstances = scoresData.length;
@@ -192,19 +203,82 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
         Map<String, Float> rect = new LinkedHashMap<>();
 
         // Set rect to a value that matches the original image
-        rect.put("left", boxesData[4 * i + 0] * imageWidthScale);
+        rect.put("left", boxesData[4 * i] * imageWidthScale);
         rect.put("top", boxesData[4 * i + 1] * imageHeightScale);
         rect.put("right", boxesData[4 * i + 2] * imageWidthScale);
         rect.put("bottom", boxesData[4 * i + 3] * imageHeightScale);
 
         output.put("rect", rect);
+
+        if (hasMasks) {
+          // [rawMaskData] is the instance mask data in the bounding box and has a size of 28 * 28
+          // @see <a href="https://github.com/facebookresearch/detectron2/discussions/3393">https://github.com/facebookresearch/detectron2/discussions/3393</a>
+          final Tensor rawMasksTensor = map.get("masks").toTensor();
+          final float[] rawMasksData = rawMasksTensor.getDataAsFloatArray();
+          output.put("mask", getMaskBytes(rawMasksData, i));
+        }
+
+
         output.put("confidenceInClass", scoresData[i]);
         output.put("detectedClass", classes.get((int)(labelsData[i] - 1)));
 
         outputs.add(output);
       }
+
       result.success(outputs);
     }
+  }
+
+
+  /**
+   * <p>Converts mask data to byte array of bitmap image and returns</>
+   * @param rawMasksData Mask data included in the inference result.
+   * @param instanceIndex Inferred instance number
+   * @return bitmap image byte array
+   */
+  private byte[] getMaskBytes(float[] rawMasksData, int instanceIndex) {
+    // rawMasksData contains 28 * 28 mask data for the number of instances
+    final float[] rawMask = Arrays.copyOfRange(rawMasksData, instanceIndex * rawMaskWidth * rawMaskWidth, (instanceIndex + 1) * rawMaskWidth * rawMaskWidth);
+
+    // color channel (RGBA)
+    final int ch = 4;
+
+    final byte[] pixels = new byte[rawMaskWidth * rawMaskWidth * ch];
+
+    // Change the color of the mask image for each instance
+    Random rand = new Random();
+    final int r = rand.nextInt(255);
+    final int g = rand.nextInt(255);
+    final int b = rand.nextInt(255);
+
+
+    // The pixel of the bitmap image to be used is saved from bottom to top in the vertical direction.
+    // @see <a href="https://en.wikipedia.org/wiki/BMP_file_format#Pixel_array_(bitmap_data)">https://en.wikipedia.org/wiki/BMP_file_format#Pixel_array_(bitmap_data)</a>
+    int offset = 0;
+    for (int i = rawMask.length; i >= rawMaskWidth; i -= rawMaskWidth) {
+      int end = i - 1, start = i - rawMaskWidth;
+      for (int j = start; j <= end; j++) {
+        // Since the masks output of the d2go model assumes 28 * 28 raw data, the mask range is 0.5 or more.
+        // @see <a href="https://detectron2.readthedocs.io/en/latest/tutorials/deployment.html#use-the-model-in-c-python">https://detectron2.readthedocs.io/en/latest/tutorials/deployment.html#use-the-model-in-c-python</a>
+        final int a = rawMask[j] < 0.5 ? 0 : 128;
+        pixels[ch * offset] = (byte) (r & 0xff);
+        pixels[ch * offset + 1] = (byte) (g & 0xff);
+        pixels[ch * offset + 2] = (byte) (b & 0xff);
+        pixels[ch * offset + 3] = (byte) (a & 0xff);
+        offset += 1;
+      }
+    }
+
+    // Concatenate pixels and bitmap headers
+    final byte[] bmpFileHeader = BitmapHeader.getBMPFileHeader();
+    final byte[] bmpInfoHeader = BitmapHeader.getBMPInfoHeader(rawMaskWidth, rawMaskWidth);
+    byte[] maskBytes = new byte[bmpFileHeader.length + bmpInfoHeader.length + pixels.length];
+
+    System.arraycopy(bmpFileHeader, 0, maskBytes, 0, bmpFileHeader.length);
+    System.arraycopy(bmpInfoHeader, 0, maskBytes, bmpFileHeader.length, bmpInfoHeader.length);
+    System.arraycopy(pixels, 0, maskBytes, bmpFileHeader.length + bmpInfoHeader.length, pixels.length);
+
+    return maskBytes;
   }
 
   /**

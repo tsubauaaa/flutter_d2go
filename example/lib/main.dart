@@ -1,5 +1,8 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
+import 'dart:typed_data';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -26,6 +29,8 @@ class _MyAppState extends State<MyApp> {
   int? _imageWidth;
   int? _imageHeight;
   final ImagePicker _picker = ImagePicker();
+
+  Random r = Random();
 
   @override
   void initState() {
@@ -55,25 +60,29 @@ class _MyAppState extends State<MyApp> {
     _imageHeight = decodedImage.height;
     final predictions = await FlutterD2go.getImagePrediction(
       image: image,
-      minScore: 0.7,
+      minScore: 0.5,
     );
     List<RecognitionModel>? recognitions;
     if (predictions.isNotEmpty) {
-      recognitions = predictions
-          .map(
-            (e) => RecognitionModel(
-                Rectangle(
-                  e['rect']['left'],
-                  e['rect']['top'],
-                  e['rect']['right'],
-                  e['rect']['bottom'],
-                ),
-                e['confidenceInClass'],
-                e['detectedClass']),
-          )
-          .toList();
+      recognitions = predictions.map(
+        (e) {
+          return RecognitionModel(
+              Rectangle(
+                e['rect']['left'],
+                e['rect']['top'],
+                e['rect']['right'],
+                e['rect']['bottom'],
+              ),
+              e['mask'],
+              e['confidenceInClass'],
+              e['detectedClass']);
+        },
+      ).toList();
     }
-    setState(() => _recognitions = recognitions);
+
+    setState(() {
+      _recognitions = recognitions;
+    });
   }
 
   Future<File> getImageFileFromAssets(String path) async {
@@ -107,6 +116,19 @@ class _MyAppState extends State<MyApp> {
       final aspectRatio = _imageHeight! / _imageWidth! * screenWidth;
       final widthScale = screenWidth / _imageWidth!;
       final heightScale = aspectRatio / _imageHeight!;
+
+      if (_recognitions!.first.mask != null) {
+        stackChildren.addAll(_recognitions!.map(
+          (recognition) {
+            return RenderSegments(
+              imageWidthScale: widthScale,
+              imageHeightScale: heightScale,
+              recognition: recognition,
+            );
+          },
+        ).toList());
+      }
+
       stackChildren.addAll(_recognitions!.map(
         (recognition) {
           return RenderBoxes(
@@ -245,13 +267,47 @@ class RenderBoxes extends StatelessWidget {
   }
 }
 
+class RenderSegments extends StatelessWidget {
+  const RenderSegments({
+    Key? key,
+    required this.recognition,
+    required this.imageWidthScale,
+    required this.imageHeightScale,
+  }) : super(key: key);
+
+  final RecognitionModel recognition;
+  final double imageWidthScale;
+  final double imageHeightScale;
+
+  @override
+  Widget build(BuildContext context) {
+    final left = recognition.rect.left * imageWidthScale;
+    final top = recognition.rect.top * imageHeightScale;
+    final right = recognition.rect.right * imageWidthScale;
+    final bottom = recognition.rect.bottom * imageHeightScale;
+    final mask = recognition.mask!;
+    return Positioned(
+      left: left,
+      top: top,
+      width: right - left,
+      height: bottom - top,
+      child: Image.memory(
+        mask,
+        fit: BoxFit.fill,
+      ),
+    );
+  }
+}
+
 class RecognitionModel {
   RecognitionModel(
     this.rect,
+    this.mask,
     this.confidenceInClass,
     this.detectedClass,
   );
   Rectangle rect;
+  Uint8List? mask;
   double confidenceInClass;
   String detectedClass;
 }

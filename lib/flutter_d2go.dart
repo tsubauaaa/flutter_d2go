@@ -47,20 +47,20 @@ class FlutterD2go {
     return dirPath;
   }
 
-  /// Receive the relative path [modelPath] of the D2Go model file in Flutter's asset and
-  /// get the path [absPath] to read on the Native side.
-  /// A method that calls loadModel with invokeMethod and creates org.pytorch.Module on the Native side
-  static Future loadModel(
+  /// Receive the d2go relative path [modelPath] and [labelPath] in Flutter's asset and
+  /// get the path [absModelPath] and [absLabelPath] to read on the Native side.
+  /// A method that calls loadModel with invokeMethod and creates org.pytorch.Module on the Native side.
+  /// Returns success on success and Null on failure.
+  static Future<String?> loadModel(
       {required String modelPath, required String labelPath}) async {
     String absModelPath = await _getAbsolutePath(modelPath);
     String absLabelPath = await _getAbsolutePath(labelPath);
-    await _channel.invokeMethod('loadModel', {
+    return await _channel.invokeMethod('loadModel', {
       'absModelPath': absModelPath,
       'absLabelPath': absLabelPath,
       'assetModelPath': modelPath,
       'assetLabelPath': labelPath,
     });
-    return;
   }
 
   /// A method that calls predictImage with invokeMethod to predict
