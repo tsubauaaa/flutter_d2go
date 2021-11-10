@@ -6,7 +6,7 @@ Flutter Plugin inferring using [d2go](https://github.com/facebookresearch/d2go),
 
 ## Preview
 
-<img src="images/preview.gif" width="300">
+![](images/preview.gif)
 
 ## Installation
 
