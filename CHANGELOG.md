@@ -1,3 +1,7 @@
+## 0.2.0
+
+- Enabled to handle mask data of instance segmentation.
+
 ## 0.0.4
 
 - I am currently trying to implement segmentation. (Segmentation has not been implemented yet.) I tried to separate the Object Detection and Segmentation methods, but decided to use one method instead.
