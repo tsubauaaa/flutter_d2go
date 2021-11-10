@@ -24,7 +24,7 @@ assets:
 
 ### 1. Load model and classes
 
-The model is in Pytorch format.
+The model is in Pytorch format.  
 The format of classes file is [here](example/assets/models/classes.txt).
 
 ```dart
