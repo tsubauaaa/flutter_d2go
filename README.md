@@ -24,6 +24,9 @@ assets:
 
 ### 1. Load model and classes
 
+The model is in Pytorch format.
+The format of classes file is [here](example/assets/models/classes.txt).
+
 ```dart
 await FlutterD2go.loadModel(
     modelPath: 'assets/models/d2go.pt',     // required
