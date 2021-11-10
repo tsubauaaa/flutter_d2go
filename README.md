@@ -1,15 +1,16 @@
+[![pub package](https://img.shields.io/pub/v/flutter_d2go.svg)](https://pub.dartlang.org/packages/flutter_d2go)
+
 # flutter_d2go
 
-Flutter Plugin inferring using [d2go](https://github.com/facebookresearch/d2go), the mobile model of [detectron2](https://github.com/facebookresearch/detectron2). Currently only Android works. Also, only object detection can be performed.
+Flutter Plugin inferring using [d2go](https://github.com/facebookresearch/d2go), the mobile model of [detectron2](https://github.com/facebookresearch/detectron2). Currently only Android works. object detection and instance segmentation can be performed.
+
+## Preview
+
+<img src="images/preview.gif" width="300">
 
 ## Installation
 
 Add flutter_d2go to your `pubspec.yaml`.
-
-```yaml
-dependencies:
-  flutter_d2go: ^0.0.1
-```
 
 Put the d2go model and class file in the assets directory.
 
@@ -19,21 +20,9 @@ assets:
   - assets/models/classes.txt
 ```
 
-Run `flutter pub get`.
-
-```bash
-flutter pub get
-```
-
-## Import the library
-
-```dart
-import 'package:flutter_d2go/flutter_d2go.dart';
-```
-
 ## Usage
 
-### Load model and classes
+### 1. Load model and classes
 
 ```dart
 await FlutterD2go.loadModel(
@@ -42,7 +31,7 @@ await FlutterD2go.loadModel(
 );
 ```
 
-### Get predictions
+### 2. Get predictions
 
 ```dart
 List<Map<String, dynamic>> predictions = await FlutterD2go.getImagePrediction(
@@ -60,6 +49,7 @@ List<Map<String, dynamic>> predictions = await FlutterD2go.getImagePrediction(
 `rect` is the scale of the original image.
 `mask` depends on whether the d2go model has masks.
 If there are masks, the mask will be a Uint8List of bitmap images.
+
 ```dart
 [
   {
