@@ -1,3 +1,7 @@
+## 0.2.1
+
+- The preview image of readme is displayed.
+
 ## 0.2.0
 
 - Enabled to handle mask data of instance segmentation.
