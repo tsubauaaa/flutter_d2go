@@ -222,7 +222,7 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
         if (hasKeypoints) {
           final Tensor keypointsTensor = map.get("keypoints").toTensor();
           final float[] keypointsData = keypointsTensor.getDataAsFloatArray();
-          output.put("keypoints", getKeypointsList(keypointsData, i));
+          output.put("keypoints", getKeypointsList(keypointsData, i, bitmap.getWidth(), bitmap.getHeight()));
         }
 
         output.put("confidenceInClass", scoresData[i]);
@@ -289,13 +289,14 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
 
 
   @NonNull
-  private List<float[]> getKeypointsList(float[] keypointsData, int instanceIndex) {
+  private List<float[]> getKeypointsList(float[] keypointsData, int instanceIndex, int imageWidth, int imageHeight) {
     final int numOfKeypoints = 17;
     final float[] keypoints = Arrays.copyOfRange(keypointsData, instanceIndex * 3 * numOfKeypoints, (instanceIndex + 1) * 3 * numOfKeypoints);
     List<float[]> keypointsList = new ArrayList<>();
     for (int i = 0; i < keypoints.length; i = 3 + i) {
-      final float x = keypoints[i];
-      final float y = keypoints[i+1];
+      // Since the d2go model output assumes that the input image size is 320 * 320, match the scale with the image to be inferred.
+      final float x = keypoints[i] * imageWidth / 320;
+      final float y = keypoints[i+1] * imageHeight / 320;
       final float[] keypoint = {x, y};
       keypointsList.add(keypoint);
     }

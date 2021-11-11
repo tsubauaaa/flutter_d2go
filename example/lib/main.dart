@@ -141,8 +141,8 @@ class _MyAppState extends State<MyApp> {
             keypointChildren.add(
               RenderKeypoints(
                 keypoint: keypoint,
-                imageWidthScale: widthScale / (320 / _imageWidth!),
-                imageHeightScale: heightScale / (320 / _imageHeight!),
+                imageWidthScale: widthScale,
+                imageHeightScale: heightScale,
               ),
             );
           }
