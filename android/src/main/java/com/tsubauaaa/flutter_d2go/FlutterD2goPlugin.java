@@ -181,6 +181,7 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
     // Formatting inference results
     if (map.containsKey("boxes")) {
       final boolean hasMasks = map.containsKey("masks");
+      final boolean hasKeypoints = map.containsKey("keypoints");
 
       final Tensor boxesTensor = map.get("boxes").toTensor();
       final Tensor scoresTensor = map.get("scores").toTensor();
@@ -218,18 +219,11 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
           output.put("mask", getMaskBytes(rawMasksData, i));
         }
 
-        // add keypoints
-        final Tensor keypointsTensor = map.get("keypoints").toTensor();
-        final float[] keypointsData = keypointsTensor.getDataAsFloatArray();
-
-        final float[] rawKeypoints = Arrays.copyOfRange(keypointsData, i * 3*17, (i+1)*3*17);
-        List<float[]> keypoints = new ArrayList<>();
-        for (int j = 0; j < rawKeypoints.length; j = 3 + j) {
-          final float[] keypoint = Arrays.copyOfRange(rawKeypoints, j, j+2);
-          keypoints.add(keypoint);
+        if (hasKeypoints) {
+          final Tensor keypointsTensor = map.get("keypoints").toTensor();
+          final float[] keypointsData = keypointsTensor.getDataAsFloatArray();
+          output.put("keypoints", getKeypointsList(keypointsData, i));
         }
-        output.put("keypoints", keypoints);
-        //
 
         output.put("confidenceInClass", scoresData[i]);
         output.put("detectedClass", classes.get((int)(labelsData[i] - 1)));
@@ -292,6 +286,22 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
 
     return maskBytes;
   }
+
+
+  @NonNull
+  private List<float[]> getKeypointsList(float[] keypointsData, int instanceIndex) {
+    final int numOfKeypoints = 17;
+    final float[] keypoints = Arrays.copyOfRange(keypointsData, instanceIndex * 3 * numOfKeypoints, (instanceIndex + 1) * 3 * numOfKeypoints);
+    List<float[]> keypointsList = new ArrayList<>();
+    for (int i = 0; i < keypoints.length; i = 3 + i) {
+      final float x = keypoints[i];
+      final float y = keypoints[i+1];
+      final float[] keypoint = {x, y};
+      keypointsList.add(keypoint);
+    }
+    return keypointsList;
+  }
+
 
   /**
    * <p>Convert Normalize parameter to Float</>
