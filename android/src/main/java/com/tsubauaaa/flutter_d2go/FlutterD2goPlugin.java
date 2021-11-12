@@ -133,8 +133,9 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
    *             [minScore] threshold
    * @param result If successful, return [outputs] with result.success
    *               The format of [outputs] is List of { "rect": { "left": Float, "top": Float, "right": Float, "bottom": Float },
-   *               "mask": [66, 77, 122, 0, 0, 0, 0, 0, 0, 0, 122, 0, 0, 0, 108, 0, 0, 0, 28, ...],
-   *               "confidenceInClass": Float, "detectedClass": String }
+   *               "mask": [byte, byte, byte, byte, byte, byte, byte, byte, byte, byte, byte, byte, byte, byte, byte, byte, byte ...],
+   *               "keypoints": [[Float, Float], [Float, Float], [Float, Float], [Float, Float], ...],
+   *               "confidenceInClass": Float, "detectedClass": String }. "mask" and "keypoints" do not exist on some models.
    */
   private void predictImage(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
     Bitmap bitmap;
