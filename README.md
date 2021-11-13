@@ -12,8 +12,13 @@ Flutter Plugin inferring using [d2go](https://github.com/facebookresearch/d2go),
 
 ## Preview
 
-![](images/preview.gif)  
-![](images/keypoints.png)
+- Object detection and instance segmentation
+
+  ![](images/preview.gif)
+
+- Keypoints estimation
+
+  ![](images/keypoints.png)
 
 ## Installation
 
