@@ -62,7 +62,8 @@ List<Map<String, dynamic>> predictions = await FlutterD2go.getImagePrediction(
 #### Output format
 
 `rect` is the scale of the original image.  
-`mask` and `keypoints` depend on whether the d2go model has mask and keypoints.  
+`mask` and `keypoints` depend on whether the d2go model has mask and keypoints.
+
 `mask` will be a Uint8List of bitmap images.  
 `keypoints` will be a list of 17 (x, y).
 
