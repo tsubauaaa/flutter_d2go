@@ -1,6 +1,6 @@
 name: flutter_d2go
 description: Flutter Plugin inferring using d2go, the mobile model of detectron2.
-version: 0.2.1
+version: 0.3.0
 homepage: https://github.com/tsubauaaa/flutter_d2go
 
 environment:

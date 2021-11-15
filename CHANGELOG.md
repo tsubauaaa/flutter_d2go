@@ -1,3 +1,7 @@
+## 0.3.0
+
+- Implemented keypoint estimation function.
+
 ## 0.2.1
 
 - The preview image of readme is displayed.
