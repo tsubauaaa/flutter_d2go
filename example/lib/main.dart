@@ -41,7 +41,7 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future loadModel() async {
-    String modelPath = 'assets/models/d2go_mask.pt';
+    String modelPath = 'assets/models/d2go.pt';
     String labelPath = 'assets/models/classes.txt';
     try {
       await FlutterD2go.loadModel(
@@ -62,7 +62,7 @@ class _MyAppState extends State<MyApp> {
     _imageHeight = decodedImage.height;
     final predictions = await FlutterD2go.getImagePrediction(
       image: image,
-      minScore: 0.5,
+      minScore: 0.7,
     );
     List<RecognitionModel>? recognitions;
     if (predictions.isNotEmpty) {
