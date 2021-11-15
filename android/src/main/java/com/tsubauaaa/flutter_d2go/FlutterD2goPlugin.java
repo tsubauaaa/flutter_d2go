@@ -35,6 +35,7 @@ import io.flutter.plugin.common.PluginRegistry;
 
 /**
  * <p>FlutterD2goPlugin</>
+ *
  * This class is a class that infers using the d2go model
  */
 public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
@@ -132,8 +133,9 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
    *             [minScore] threshold
    * @param result If successful, return [outputs] with result.success
    *               The format of [outputs] is List of { "rect": { "left": Float, "top": Float, "right": Float, "bottom": Float },
-   *               "mask": [66, 77, 122, 0, 0, 0, 0, 0, 0, 0, 122, 0, 0, 0, 108, 0, 0, 0, 28, ...],
-   *               "confidenceInClass": Float, "detectedClass": String }
+   *               "mask": [byte, byte, byte, byte, byte, byte, byte, byte, byte, byte, byte, byte, byte, byte, byte, byte, byte ...],
+   *               "keypoints": [[Float, Float], [Float, Float], [Float, Float], [Float, Float], ...],
+   *               "confidenceInClass": Float, "detectedClass": String }. "mask" and "keypoints" do not exist on some models.
    */
   private void predictImage(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
     Bitmap bitmap;
@@ -181,6 +183,7 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
     // Formatting inference results
     if (map.containsKey("boxes")) {
       final boolean hasMasks = map.containsKey("masks");
+      final boolean hasKeypoints = map.containsKey("keypoints");
 
       final Tensor boxesTensor = map.get("boxes").toTensor();
       final Tensor scoresTensor = map.get("scores").toTensor();
@@ -218,6 +221,12 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
           output.put("mask", getMaskBytes(rawMasksData, i));
         }
 
+        if (hasKeypoints) {
+          // keypointsData is in a format with 17 * (x, y, score) for each instance. (coco estimates have 17 keypoints)
+          final Tensor keypointsTensor = map.get("keypoints").toTensor();
+          final float[] keypointsData = keypointsTensor.getDataAsFloatArray();
+          output.put("keypoints", getKeypointsList(keypointsData, i, bitmap.getWidth(), bitmap.getHeight()));
+        }
 
         output.put("confidenceInClass", scoresData[i]);
         output.put("detectedClass", classes.get((int)(labelsData[i] - 1)));
@@ -232,6 +241,7 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
 
   /**
    * <p>Converts mask data to byte array of bitmap image and returns</>
+   *
    * @param rawMasksData Mask data included in the inference result.
    * @param instanceIndex Inferred instance number
    * @return bitmap image byte array
@@ -280,6 +290,33 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
 
     return maskBytes;
   }
+
+
+  /**
+   * <p>Return 17 keypoints (x, y) for each instance as a list</>
+   * 
+   * @param keypointsData is in a format with 17 * (x, y, score) for each instance
+   * @param instanceIndex Inferred instance number
+   * @param imageWidth Image width size to infer
+   * @param imageHeight Image height size to infer
+   * @return Returns a list of 17 keypoints (x, y)
+   */
+  @NonNull
+  private List<float[]> getKeypointsList(float[] keypointsData, int instanceIndex, int imageWidth, int imageHeight) {
+    // coco estimates have 17 keypoints
+    final int numOfKeypoints = 17;
+    final float[] keypoints = Arrays.copyOfRange(keypointsData, instanceIndex * 3 * numOfKeypoints, (instanceIndex + 1) * 3 * numOfKeypoints);
+    List<float[]> keypointsList = new ArrayList<>();
+    for (int i = 0; i < keypoints.length; i = 3 + i) {
+      // Since the d2go model output assumes that the input image size is 320 * 320, match the scale with the image to be inferred
+      final float x = keypoints[i] * imageWidth / 320;
+      final float y = keypoints[i+1] * imageHeight / 320;
+      final float[] keypoint = {x, y};
+      keypointsList.add(keypoint);
+    }
+    return keypointsList;
+  }
+
 
   /**
    * <p>Convert Normalize parameter to Float</>

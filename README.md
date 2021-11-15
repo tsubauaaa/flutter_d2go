@@ -2,11 +2,23 @@
 
 # flutter_d2go
 
-Flutter Plugin inferring using [d2go](https://github.com/facebookresearch/d2go), the mobile model of [detectron2](https://github.com/facebookresearch/detectron2). Currently only Android works. object detection and instance segmentation can be performed.
+Flutter Plugin inferring using [d2go](https://github.com/facebookresearch/d2go), the mobile model of [detectron2](https://github.com/facebookresearch/detectron2). Currently only Android works.
+
+## Features
+
+- Providing class and boundary value box by object detection
+- Providing mask data by instance segmentation
+- Providing keypoints by keypoint estimation
 
 ## Preview
 
-![](images/preview.gif)
+- Object detection and instance segmentation
+
+  ![](images/preview.gif)
+
+- Keypoints estimation
+
+  ![](images/keypoints.png)
 
 ## Installation
 
@@ -49,9 +61,11 @@ List<Map<String, dynamic>> predictions = await FlutterD2go.getImagePrediction(
 
 #### Output format
 
-`rect` is the scale of the original image.
-`mask` depends on whether the d2go model has masks.
-If there are masks, the mask will be a Uint8List of bitmap images.
+`rect` is the scale of the original image.  
+`mask` and `keypoints` depend on whether the d2go model has mask and keypoints.
+
+`mask` will be a Uint8List of bitmap images.  
+`keypoints` will be a list of 17 (x, y).
 
 ```dart
 [
@@ -62,7 +76,8 @@ If there are masks, the mask will be a Uint8List of bitmap images.
       "right": 350.64324951171875,
       "bottom": 323.0279846191406
     },
-    "mask": [66, 77, 122, 0, 0, 0, 0, 0, 0, 0, 122, ...]
+    "mask": [66, 77, 122, 0, 0, 0, 0, 0, 0, 0, 122, ...],
+    "keypoints": [[117.14504, 77.277405], [122.74037, 73.53044], [105.95437, 73.53044], ...],
     "confidenceInClass": 0.985002338886261,
     "detectedClass": "bicycle"
   }, // For each instance

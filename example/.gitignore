@@ -46,4 +46,6 @@ app.*.map.json
 /android/app/release
 
 d2go_nomask.pt
+d2go_mask.pt
 d2go_book.pt
+d2go_kp.pt

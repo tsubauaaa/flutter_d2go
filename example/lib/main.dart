@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui';
 
@@ -35,8 +34,6 @@ class _MyAppState extends State<MyApp> {
   int? _imageHeight;
   final ImagePicker _picker = ImagePicker();
 
-  Random r = Random();
-
   @override
   void initState() {
     super.initState();
@@ -65,7 +62,7 @@ class _MyAppState extends State<MyApp> {
     _imageHeight = decodedImage.height;
     final predictions = await FlutterD2go.getImagePrediction(
       image: image,
-      minScore: 0.5,
+      minScore: 0.7,
     );
     List<RecognitionModel>? recognitions;
     if (predictions.isNotEmpty) {
@@ -79,6 +76,11 @@ class _MyAppState extends State<MyApp> {
                 e['rect']['bottom'],
               ),
               e['mask'],
+              e['keypoints'] != null
+                  ? (e['keypoints'] as List)
+                      .map((k) => Keypoint(k[0], k[1]))
+                      .toList()
+                  : null,
               e['confidenceInClass'],
               e['detectedClass']);
         },
@@ -132,6 +134,22 @@ class _MyAppState extends State<MyApp> {
             );
           },
         ).toList());
+      }
+
+      if (_recognitions!.first.keypoints != null) {
+        for (RecognitionModel recognition in _recognitions!) {
+          List<Widget> keypointChildren = [];
+          for (Keypoint keypoint in recognition.keypoints!) {
+            keypointChildren.add(
+              RenderKeypoints(
+                keypoint: keypoint,
+                imageWidthScale: widthScale,
+                imageHeightScale: heightScale,
+              ),
+            );
+          }
+          stackChildren.addAll(keypointChildren);
+        }
       }
 
       stackChildren.addAll(_recognitions!.map(
@@ -304,17 +322,59 @@ class RenderSegments extends StatelessWidget {
   }
 }
 
+class RenderKeypoints extends StatelessWidget {
+  const RenderKeypoints({
+    Key? key,
+    required this.keypoint,
+    required this.imageWidthScale,
+    required this.imageHeightScale,
+  }) : super(key: key);
+
+  final Keypoint keypoint;
+  final double imageWidthScale;
+  final double imageHeightScale;
+
+  @override
+  Widget build(BuildContext context) {
+    final x = keypoint.x * imageWidthScale;
+    final y = keypoint.y * imageHeightScale;
+    return Positioned(
+      left: x,
+      top: y,
+      child: Container(
+        width: 8,
+        height: 8,
+        decoration: const BoxDecoration(
+          color: Colors.red,
+          shape: BoxShape.circle,
+        ),
+      ),
+    );
+  }
+}
+
 class RecognitionModel {
   RecognitionModel(
     this.rect,
     this.mask,
+    this.keypoints,
     this.confidenceInClass,
     this.detectedClass,
   );
   Rectangle rect;
   Uint8List? mask;
+  List<Keypoint>? keypoints;
   double confidenceInClass;
   String detectedClass;
+}
+
+class Keypoint {
+  Keypoint(
+    this.x,
+    this.y,
+  );
+  double x;
+  double y;
 }
 
 class Rectangle {
