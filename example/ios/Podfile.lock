@@ -2,8 +2,16 @@ PODS:
   - Flutter (1.0.0)
   - flutter_d2go (0.0.1):
     - Flutter
+    - LibTorch (~> 1.9.0)
+    - LibTorchvision (= 0.10.0)
   - image_picker (0.0.1):
     - Flutter
+  - LibTorch (1.9.0):
+    - LibTorch/Core (= 1.9.0)
+  - LibTorch/Core (1.9.0):
+    - LibTorch/Torch
+  - LibTorch/Torch (1.9.0)
+  - LibTorchvision (0.10.0)
   - path_provider (0.0.1):
     - Flutter
 
@@ -12,6 +20,11 @@ DEPENDENCIES:
   - flutter_d2go (from `.symlinks/plugins/flutter_d2go/ios`)
   - image_picker (from `.symlinks/plugins/image_picker/ios`)
   - path_provider (from `.symlinks/plugins/path_provider/ios`)
+
+SPEC REPOS:
+  trunk:
+    - LibTorch
+    - LibTorchvision
 
 EXTERNAL SOURCES:
   Flutter:
@@ -25,10 +38,12 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   Flutter: 50d75fe2f02b26cc09d224853bb45737f8b3214a
-  flutter_d2go: a2741047b37687bc5c1a5243126eb57a35f05ab0
+  flutter_d2go: 85fde4419fa07fe0d972e20ec4c8a30c482b3da9
   image_picker: 9aa50e1d8cdacdbed739e925b7eea16d014367e6
+  LibTorch: d89f452b8b932002bd98884b3921850a95c35e14
+  LibTorchvision: 5005f76146d310b7bb1f7ccfa618188f9e3a0dc2
   path_provider: d1e9807085df1f9cc9318206cd649dc0b76be3de
 
-PODFILE CHECKSUM: aafe91acc616949ddb318b77800a7f51bffa2a4c
+PODFILE CHECKSUM: ddd930128a51b4de5dcae538fb05b7669e161fdd
 
 COCOAPODS: 1.10.1

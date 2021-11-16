@@ -2,33 +2,32 @@ import Flutter
 import UIKit
 
 public class SwiftFlutterD2goPlugin: NSObject, FlutterPlugin {
-  public static func register(with registrar: FlutterPluginRegistrar) {
-    let channel = FlutterMethodChannel(name: "tsubauaaa.com/flutter_d2go", binaryMessenger: registrar.messenger())
-    let instance = SwiftFlutterD2goPlugin()
-    registrar.addMethodCallDelegate(instance, channel: channel)
-  }
 
-  public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-    let args:Dictionary<String, AnyObject> = call.arguments as! Dictionary<String, AnyObject>;
-    if ("loadModel" == call.method) {
-            print(args)
-            result("iOS " + UIDevice.current.systemVersion)
-    } else if ("predictImage" == call.method) {
-        result(predictImage(call:call))
+    var module: TorchModule?
+    
+    public static func register(with registrar: FlutterPluginRegistrar) {
+        let channel = FlutterMethodChannel(name: "tsubauaaa.com/flutter_d2go", binaryMessenger: registrar.messenger())
+        let instance = SwiftFlutterD2goPlugin()
+        registrar.addMethodCallDelegate(instance, channel: channel)
     }
 
-    result("iOS " + UIDevice.current.systemVersion)
-  }
+    public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        let args:Dictionary<String, AnyObject> = call.arguments as! Dictionary<String, AnyObject>;
+        if ("loadModel" == call.method) {
+            print(args)
+            result(loadModel(args: args))
+        } else if ("predictImage" == call.method) {
+            result(predictImage(call: call))
+        } else {
+            result(FlutterMethodNotImplemented)
+        }
+    }
 
-    private func loadModel(call: FlutterMethodCall) {
-//         lazy var module:  = {
-//             if let filePath = Bundle.main.path(forResource: "d2go_optimized", ofType: "ptl"),
-//                 let module = InferenceModule(fileAtPath: filePath) {
-//                 return module
-//             } else {
-//                 fatalError("Failed to load model!")
-//             }
-//         }()
+    private func loadModel(args: Dictionary<String, AnyObject>) -> String {
+        let absModelPath = args["absModelPath"] as! String
+        module = TorchModule(fileAtPath: absModelPath)
+        print("Model Loaded")
+        return "success"
     }
 
     private func predictImage(call: FlutterMethodCall) -> [[String: Any]] {

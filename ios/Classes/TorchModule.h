@@ -4,10 +4,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface TorchModule : NSObject
 
-- (nullable instancetype)initWithFileAtPath:(NSString*)filePath
-    NS_SWIFT_NAME(init(fileAtPath:))NS_DESIGNATED_INITIALIZER;
-+ (instancetype)new NS_UNAVAILABLE;
-- (instancetype)init NS_UNAVAILABLE;
+- (nullable instancetype)initWithFileAtPath:(NSString*)filePath;
+- (nullable NSArray<NSNumber*>*)predictImage:(void*)imageBuffer withWidth:(int)width andHeight:(int)height;
+- (nullable NSArray<NSNumber*>*)predict:(void*)data withShape:(NSArray<NSNumber*>*)shape andDtype:(NSString*)dtype;
 
 @end
 
