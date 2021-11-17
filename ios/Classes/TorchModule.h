@@ -4,7 +4,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface TorchModule : NSObject
 
-- (nullable instancetype)initWithFileAtPath:(NSString*)filePath;
+- (nullable instancetype)initWithLoadModel:(NSString*)absModelPath;
 - (instancetype)init NS_UNAVAILABLE;
 - (nullable NSArray<NSDictionary*>*)predictImage:(void*)imageBuffer inputWidth:(int)inputWidth inputHeight:(int)inputHeight widthScale:(double)widthScale heightScale:(double)heightScale;
 @end

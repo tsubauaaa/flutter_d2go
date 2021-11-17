@@ -26,7 +26,7 @@ public class SwiftFlutterD2goPlugin: NSObject, FlutterPlugin {
 
     private func loadModel(args: Dictionary<String, AnyObject>) -> String {
         let absModelPath = args["absModelPath"] as! String
-        module = TorchModule(fileAtPath: absModelPath)
+        module = TorchModule(loadModel: absModelPath)
         print("Model Loaded")
         return "success"
     }
