@@ -47,7 +47,7 @@ public class SwiftFlutterD2goPlugin: NSObject, FlutterPlugin {
         }
 //        print(outputs)
         
-        return outputs as! [Dictionary]
+        return outputs as! [Dictionary<String, AnyObject>]
         
 //        return         [
 //            [
