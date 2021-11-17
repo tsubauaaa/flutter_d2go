@@ -17,7 +17,8 @@ public class SwiftFlutterD2goPlugin: NSObject, FlutterPlugin {
             print(args)
             result(loadModel(args: args))
         } else if ("predictImage" == call.method) {
-            result(predictImage(call: call))
+            print(args)
+            result(predictImage(args: args))
         } else {
             result(FlutterMethodNotImplemented)
         }
@@ -30,19 +31,35 @@ public class SwiftFlutterD2goPlugin: NSObject, FlutterPlugin {
         return "success"
     }
 
-    private func predictImage(call: FlutterMethodCall) -> [[String: Any]] {
-        return         [
-            [
-              "rect": [
-                "left": 74.65713500976562,
-                "top": 76.94147491455078,
-                "right": 350.64324951171875,
-                "bottom": 323.0279846191406
-              ],
-              "confidenceInClass": 0.985002338886261,
-              "detectedClass": "bicycle"
-            ]
-        ]
-
+    private func predictImage(args: Dictionary<String, AnyObject>) -> [[String: Any]] {
+        let data:FlutterStandardTypedData = args["image"] as! FlutterStandardTypedData
+        let inputWidth = args["width"] as! Int
+        let inputHeight:Int = args["height"] as! Int
+        let image = UIImage(data: data.data)!
+        let resizedImage = image.resized(to: CGSize(width: CGFloat(inputWidth), height: CGFloat(inputHeight)))
+        guard var pixelBuffer = resizedImage.normalized() else {
+                  return []
+        }
+        let imageWidthScale = image.size.width/Double(inputWidth)
+        let imageHeightScale = image.size.height/Double(inputHeight)
+        guard let outputs = self.module?.predictImage(&pixelBuffer, inputWidth: Int32(inputWidth), inputHeight: Int32(inputHeight), widthScale: imageWidthScale, heightScale: imageHeightScale) else {
+            return []
+        }
+//        print(outputs)
+        
+        return outputs as! [Dictionary]
+        
+//        return         [
+//            [
+//              "rect": [
+//                "left": 74.65713500976562,
+//                "top": 76.94147491455078,
+//                "right": 350.64324951171875,
+//                "bottom": 323.0279846191406
+//              ],
+//              "confidenceInClass": 0.985002338886261,
+//              "detectedClass": "bicycle"
+//            ]
+//        ]
     }
 }
