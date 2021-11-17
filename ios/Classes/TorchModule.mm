@@ -65,14 +65,7 @@
 //            [output setObject:@(labelsBuffer[i]) forKey:@"detectedClass"];
             [output setObject:@"person" forKey:@"detectedClass"];
         
-            [outputs addObject:output];
-            
-//            [results addObject:@(boxesBuffer[4 * i])];
-//            [results addObject:@(boxesBuffer[4 * i + 1])];
-//            [results addObject:@(boxesBuffer[4 * i + 2])];
-//            [results addObject:@(boxesBuffer[4 * i + 3])];
-//            [results addObject:@(scoresBuffer[i])];
-//            [results addObject:@(labelsBuffer[i])];
+            [outputs addObject:output];            
         }
 
         return [outputs copy];
