@@ -21,7 +21,6 @@ public class SwiftFlutterD2goPlugin: NSObject, FlutterPlugin {
         if ("loadModel" == call.method) {
             result(loadModel(args: args))
         } else if ("predictImage" == call.method) {
-            print(args)
             result(predictImage(args: args))
         } else {
             result(FlutterMethodNotImplemented)
