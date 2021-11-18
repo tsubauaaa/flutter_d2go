@@ -26,7 +26,8 @@ public class SwiftFlutterD2goPlugin: NSObject, FlutterPlugin {
 
     private func loadModel(args: Dictionary<String, AnyObject>) -> String {
         let absModelPath = args["absModelPath"] as! String
-        module = TorchModule(loadModel: absModelPath)
+        let absLabelPath = args["absLabelPath"] as! String
+        module = TorchModule(loadModel: absModelPath, absLabelPath: absLabelPath)
         print("Model Loaded")
         return "success"
     }
@@ -42,7 +43,8 @@ public class SwiftFlutterD2goPlugin: NSObject, FlutterPlugin {
         }
         let imageWidthScale = image.size.width/Double(inputWidth)
         let imageHeightScale = image.size.height/Double(inputHeight)
-        guard let outputs = self.module?.predictImage(&pixelBuffer, inputWidth: Int32(inputWidth), inputHeight: Int32(inputHeight), widthScale: imageWidthScale, heightScale: imageHeightScale) else {
+        let threshold = args["minScore"] as! Double
+        guard let outputs = self.module?.predictImage(&pixelBuffer, inputWidth: Int32(inputWidth), inputHeight: Int32(inputHeight), widthScale: imageWidthScale, heightScale: imageHeightScale, threshold: threshold) else {
             return []
         }
 //        print(outputs)

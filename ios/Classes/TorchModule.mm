@@ -2,15 +2,27 @@
 #import <Libtorch/Libtorch.h>
 
 @implementation TorchModule {
-    @protected torch::jit::script::Module _module;
+    @protected
+        torch::jit::script::Module _module;
+    @protected
+        NSArray *_classes;
 }
 
-- (nullable instancetype)initWithLoadModel:(NSString*)absModelPath {
+- (nullable instancetype)initWithLoadModel:(NSString*)absModelPath absLabelPath:(NSString*)absLabelPath {
     self = [super init];
     if (self) {
       try {
           _module = torch::jit::load(absModelPath.UTF8String);
           _module.eval();
+          NSError *error;
+          NSString* lines = [NSString stringWithContentsOfFile:absLabelPath
+                                                        encoding:NSUTF8StringEncoding
+                                                           error:&error];
+          if (error) {
+              NSLog(@"Error reading file: %@", error.localizedDescription);
+          }
+//          NSLog(@"lines: %@", lines);
+          _classes = [lines componentsSeparatedByString:@"\n"];
       } catch (const std::exception& e) {
           NSLog(@"%s", e.what());
           return nil;
@@ -19,7 +31,7 @@
     return self;
 }
 
-- (NSArray<NSDictionary*>*)predictImage:(void*)imageBuffer inputWidth:(int)inputWidth inputHeight:(int)inputHeight widthScale:(double)widthScale heightScale:(double)heightScale {
+- (NSArray<NSDictionary*>*)predictImage:(void*)imageBuffer inputWidth:(int)inputWidth inputHeight:(int)inputHeight widthScale:(double)widthScale heightScale:(double)heightScale threshold:(double)threshold {
     try {
         at::Tensor tensor = torch::from_blob(imageBuffer, {3, inputWidth, inputHeight}, at::kFloat);
         c10::InferenceMode guard;
@@ -49,7 +61,7 @@
         NSMutableArray* outputs = [[NSMutableArray alloc] init];
         long num = scoresTensor.numel();
         for (int i = 0; i < num; i++) {
-            if (scoresBuffer[i] < 0.5)
+            if (scoresBuffer[i] < threshold)
                 continue;
             NSMutableDictionary* output = [[NSMutableDictionary dictionary] init];
             NSMutableDictionary* rect = [[NSMutableDictionary dictionary] init];
@@ -62,10 +74,10 @@
             [output setObject:rect forKey:@"rect"];
             
             [output setObject:@(scoresBuffer[i]) forKey:@"confidenceInClass"];
-//            [output setObject:@(labelsBuffer[i]) forKey:@"detectedClass"];
-            [output setObject:@"person" forKey:@"detectedClass"];
+            [output setObject:[_classes objectAtIndex:labelsBuffer[i] - 1] forKey:@"detectedClass"];
+//            [output setObject:@"person" forKey:@"detectedClass"];
         
-            [outputs addObject:output];            
+            [outputs addObject:output];       
         }
 
         return [outputs copy];
