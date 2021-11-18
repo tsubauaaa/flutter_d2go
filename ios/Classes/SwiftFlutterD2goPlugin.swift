@@ -1,6 +1,11 @@
 import Flutter
 import UIKit
 
+
+/// FlutterD2goPlugin
+///
+/// This class is a class that infers using the d2go model.
+///
 public class SwiftFlutterD2goPlugin: NSObject, FlutterPlugin {
 
     var module: TorchModule?
@@ -23,6 +28,13 @@ public class SwiftFlutterD2goPlugin: NSObject, FlutterPlugin {
         }
     }
 
+    
+    /// Call Objective-C pytorch module to load model and classes.
+    ///
+    /// - Parameter args: `absModelPath` is the path of the D2Go model loaded by the load of pytorch module.
+    ///                   `absLabelPath` is the path of the file where the class is written.
+    /// - Returns: If successful, return the string "success" in result.success.
+    ///
     private func loadModel(args: Dictionary<String, AnyObject>) -> String {
         let absModelPath = args["absModelPath"] as! String
         let absLabelPath = args["absLabelPath"] as! String
@@ -31,6 +43,17 @@ public class SwiftFlutterD2goPlugin: NSObject, FlutterPlugin {
         return "success"
     }
 
+    
+    /// Call Objective-C's pytorch module to receive the result.
+    ///
+    /// - Parameter args: `image` is a list of bytes image to be inferred.
+    ///                   `width` is a  width of image when inferring to d2go model.
+    ///                   `height` is a height of image when inferring to d2go model.
+    ///                   `mean` is a average value used in normalize.
+    ///                   `std` is a standard deviation used in normalize.
+    ///                   `minScore` is a threshold.
+    /// - Returns: The result of inference by the pytorch module of Objective-C.
+    ///
     private func predictImage(args: Dictionary<String, AnyObject>) -> [[String: Any]] {
         let data:FlutterStandardTypedData = args["image"] as! FlutterStandardTypedData
         let inputWidth  = args["width"] as! Int
@@ -48,7 +71,6 @@ public class SwiftFlutterD2goPlugin: NSObject, FlutterPlugin {
         guard let outputs = self.module?.predictImage(&pixelBuffer, inputWidth: Int32(inputWidth), inputHeight: Int32(inputHeight), widthScale: imageWidthScale, heightScale: imageHeightScale, threshold: threshold) else {
             return []
         }
-//        print(outputs)
         
         return outputs as! [Dictionary<String, AnyObject>]
     }

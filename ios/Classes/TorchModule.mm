@@ -8,6 +8,12 @@
         NSArray *_classes;
 }
 
+
+/// Load the d2go model and get pytorch module in [_module]. Read the classes file and add classes to [_classes].
+///
+/// @param absModelPath The path of the D2Go model loaded by the load of org.pytorch.Module.
+/// @param absLabelPath The path of the file where the class is written.
+/// 
 - (nullable instancetype)initWithLoadModel:(NSString*)absModelPath absLabelPath:(NSString*)absLabelPath {
     self = [super init];
     if (self) {
@@ -31,6 +37,21 @@
     return self;
 }
 
+
+/// Infer using the D2Go model, format the result and return it.
+/// @param imageBuffer <#imageBuffer description#>
+/// @param inputWidth width of image when inferring to d2go model.
+/// @param inputHeight height of image when inferring to d2go model.
+/// @param widthScale the increase / decrease ratio between the image and the original image.
+/// @param heightScale the increase / decrease ratio between the image and the original image.
+/// @param threshold confidence threshold to exclude from inference results.
+///
+/// @return Inference result.
+///         the format of [outputs] is List of { "rect": { "left": Float, "top": Float, "right": Float, "bottom": Float },
+///         "mask": [byte, byte, byte, byte, byte, byte, byte, byte, byte, byte, byte, byte, byte, byte, byte, byte, byte ...],
+///         "keypoints": [[Float, Float], [Float, Float], [Float, Float], [Float, Float], ...],
+///         "confidenceInClass": Float, "detectedClass": String }. "mask" and "keypoints" do not exist on some models.
+///
 - (NSArray<NSDictionary*>*)predictImage:(void*)imageBuffer inputWidth:(int)inputWidth inputHeight:(int)inputHeight widthScale:(double)widthScale heightScale:(double)heightScale threshold:(double)threshold {
     try {
         at::Tensor tensor = torch::from_blob(imageBuffer, {3, inputWidth, inputHeight}, at::kFloat);
