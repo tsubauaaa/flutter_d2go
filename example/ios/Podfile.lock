@@ -1,6 +1,6 @@
 PODS:
   - Flutter (1.0.0)
-  - flutter_d2go (0.0.1):
+  - flutter_d2go (0.5.0):
     - Flutter
     - LibTorch (~> 1.9.0)
     - LibTorchvision (= 0.10.0)
@@ -38,12 +38,12 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   Flutter: 50d75fe2f02b26cc09d224853bb45737f8b3214a
-  flutter_d2go: 85fde4419fa07fe0d972e20ec4c8a30c482b3da9
+  flutter_d2go: 967892d3466344aa7497eb65d8aa56e915c21d3e
   image_picker: 9aa50e1d8cdacdbed739e925b7eea16d014367e6
   LibTorch: d89f452b8b932002bd98884b3921850a95c35e14
   LibTorchvision: 5005f76146d310b7bb1f7ccfa618188f9e3a0dc2
   path_provider: d1e9807085df1f9cc9318206cd649dc0b76be3de
 
-PODFILE CHECKSUM: ddd930128a51b4de5dcae538fb05b7669e161fdd
+PODFILE CHECKSUM: fe28524d052975a46c416ec54dc370d5e77973a0
 
 COCOAPODS: 1.10.1
