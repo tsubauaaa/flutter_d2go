@@ -75,9 +75,8 @@
             
             [output setObject:@(scoresBuffer[i]) forKey:@"confidenceInClass"];
             [output setObject:[_classes objectAtIndex:labelsBuffer[i] - 1] forKey:@"detectedClass"];
-//            [output setObject:@"person" forKey:@"detectedClass"];
         
-            [outputs addObject:output];       
+            [outputs addObject:output];
         }
 
         return [outputs copy];

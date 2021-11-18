@@ -11,7 +11,7 @@ extension UIImage {
         return image
     }
     
-    func normalized() -> [Float32]? {
+    func normalized(mean normMeanRGB: [Float32], std normStdRGB: [Float32] ) -> [Float32]? {
         guard let cgImage = self.cgImage else {
             return nil
         }
@@ -36,9 +36,9 @@ extension UIImage {
         }
         var normalizedBuffer: [Float32] = [Float32](repeating: 0, count: w * h * 3)
         for i in 0 ..< w * h {
-            normalizedBuffer[i] = Float32(rawBytes[i * 4 + 0]) / 255.0
-            normalizedBuffer[w * h + i] = Float32(rawBytes[i * 4 + 1]) / 255.0
-            normalizedBuffer[w * h * 2 + i] = Float32(rawBytes[i * 4 + 2]) / 255.0
+            normalizedBuffer[i] = Float32(Float(rawBytes[i * 4 + 0]) - normMeanRGB[0]) / 255.0 / normStdRGB[0]
+            normalizedBuffer[w * h + i] = Float32(Float(rawBytes[i * 4 + 1]) - normMeanRGB[1]) / 255.0 / normStdRGB[1]
+            normalizedBuffer[w * h * 2 + i] = Float32(Float(rawBytes[i * 4 + 2]) - normMeanRGB[2]) / 255.0 / normStdRGB[2]
         }
         return normalizedBuffer
     }

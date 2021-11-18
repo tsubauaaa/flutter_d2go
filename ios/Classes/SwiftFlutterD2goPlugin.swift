@@ -14,7 +14,6 @@ public class SwiftFlutterD2goPlugin: NSObject, FlutterPlugin {
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         let args:Dictionary<String, AnyObject> = call.arguments as! Dictionary<String, AnyObject>;
         if ("loadModel" == call.method) {
-            print(args)
             result(loadModel(args: args))
         } else if ("predictImage" == call.method) {
             print(args)
@@ -34,11 +33,13 @@ public class SwiftFlutterD2goPlugin: NSObject, FlutterPlugin {
 
     private func predictImage(args: Dictionary<String, AnyObject>) -> [[String: Any]] {
         let data:FlutterStandardTypedData = args["image"] as! FlutterStandardTypedData
-        let inputWidth = args["width"] as! Int
-        let inputHeight:Int = args["height"] as! Int
+        let inputWidth  = args["width"] as! Int
+        let inputHeight = args["height"] as! Int
+        let mean = args["mean"] as! [Float32]
+        let std = args["std"] as! [Float32]
         let image = UIImage(data: data.data)!
         let resizedImage = image.resized(to: CGSize(width: CGFloat(inputWidth), height: CGFloat(inputHeight)))
-        guard var pixelBuffer = resizedImage.normalized() else {
+        guard var pixelBuffer = resizedImage.normalized(mean: mean, std: std) else {
                   return []
         }
         let imageWidthScale = image.size.width/Double(inputWidth)
