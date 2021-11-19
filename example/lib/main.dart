@@ -62,7 +62,7 @@ class _MyAppState extends State<MyApp> {
     _imageHeight = decodedImage.height;
     final predictions = await FlutterD2go.getImagePrediction(
       image: image,
-      minScore: 0.7,
+      minScore: 0.8,
     );
     List<RecognitionModel>? recognitions;
     if (predictions.isNotEmpty) {
@@ -196,7 +196,7 @@ class _MyAppState extends State<MyApp> {
                             _selectedImage = null;
                           }
                         }),
-                    text: 'Test Imag\n${_index + 1}/${_imageList.length}'),
+                    text: 'Test Image\n${_index + 1}/${_imageList.length}'),
                 MyButton(
                     onPressed: () async {
                       final XFile? pickedFile =
@@ -235,7 +235,10 @@ class MyButton extends StatelessWidget {
         child: Text(
           text,
           textAlign: TextAlign.center,
-          style: const TextStyle(color: Colors.black),
+          style: const TextStyle(
+            color: Colors.black,
+            fontSize: 12,
+          ),
         ),
         style: ElevatedButton.styleFrom(
           primary: Colors.grey[300],
@@ -368,15 +371,6 @@ class RecognitionModel {
   String detectedClass;
 }
 
-class Keypoint {
-  Keypoint(
-    this.x,
-    this.y,
-  );
-  double x;
-  double y;
-}
-
 class Rectangle {
   Rectangle(
     this.left,
@@ -388,4 +382,13 @@ class Rectangle {
   double top;
   double right;
   double bottom;
+}
+
+class Keypoint {
+  Keypoint(
+    this.x,
+    this.y,
+  );
+  double x;
+  double y;
 }
