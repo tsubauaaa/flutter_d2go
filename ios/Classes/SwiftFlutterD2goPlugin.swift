@@ -59,6 +59,8 @@ public class SwiftFlutterD2goPlugin: NSObject, FlutterPlugin {
         let inputHeight = args["height"] as! Int
         let mean = args["mean"] as! [Float32]
         let std = args["std"] as! [Float32]
+        
+        // Create a UIImage object from FlutterStandardTypedData and fit the size to the model.
         let image = UIImage(data: data.data)!
         let resizedImage = image.resized(to: CGSize(width: CGFloat(inputWidth), height: CGFloat(inputHeight)))
         guard var pixelBuffer = resizedImage.normalized(mean: mean, std: std) else {
@@ -67,6 +69,8 @@ public class SwiftFlutterD2goPlugin: NSObject, FlutterPlugin {
         let imageWidthScale = image.size.width/Double(inputWidth)
         let imageHeightScale = image.size.height/Double(inputHeight)
         let threshold = args["minScore"] as! Double
+        
+        // Call Objective-C's pytorch module.
         guard let outputs = self.module?.predictImage(&pixelBuffer, inputWidth: Int32(inputWidth), inputHeight: Int32(inputHeight), widthScale: imageWidthScale, heightScale: imageHeightScale, threshold: threshold) else {
             return []
         }

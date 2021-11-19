@@ -60,12 +60,16 @@
         std::vector<torch::Tensor> v;
         v.push_back(tensor);
 
+        // inference
         auto outputTuple = _module.forward({at::TensorList(v)}).toTuple();
+        
         auto outputDict = outputTuple->elements()[1].toList().get(0).toGenericDict();
         auto boxesTensor = outputDict.at("boxes").toTensor();
         auto scoresTensor = outputDict.at("scores").toTensor();
         auto labelsTensor = outputDict.at("labels").toTensor();
     
+        // [boxesBuffer] has 4 sets of left, top, right and bottom per instance
+        // boxesBuffer = [left1, top1, right1, bottom1, left2, top2, right2, bottom2, left3, top3, ..., bottomN]
         float* boxesBuffer = boxesTensor.data_ptr<float>();
         if (!boxesBuffer) {
             return nil;
@@ -79,6 +83,7 @@
             return nil;
         }
 
+        // Inferred number of all instances
         NSMutableArray* outputs = [[NSMutableArray alloc] init];
         long num = scoresTensor.numel();
         for (int i = 0; i < num; i++) {
@@ -87,6 +92,7 @@
             NSMutableDictionary* output = [[NSMutableDictionary dictionary] init];
             NSMutableDictionary* rect = [[NSMutableDictionary dictionary] init];
             
+            // Set rect to a value that matches the original image
             [rect setObject:@(boxesBuffer[4 * i] * widthScale) forKey:@"left"];
             [rect setObject:@(boxesBuffer[4 * i + 1] * heightScale) forKey:@"top"];
             [rect setObject:@(boxesBuffer[4 * i + 2] * widthScale) forKey:@"right"];

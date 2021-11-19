@@ -1,6 +1,18 @@
 import UIKit
 
+
+/// Extension of UIImage
+///
+/// Extension to resize and normalize UIImage
+///
 extension UIImage {
+
+    
+    /// Resize with the specified width and height and ratio.
+    /// - Parameters:
+    ///   - newSize: Specified width and height
+    ///   - scale: Ratio (default = 1)
+    /// - Returns: Resized image
     func resized(to newSize: CGSize, scale: CGFloat = 1) -> UIImage {
         let format = UIGraphicsImageRendererFormat.default()
         format.scale = scale
@@ -11,6 +23,12 @@ extension UIImage {
         return image
     }
     
+    
+    /// Normalizes and returns the image.
+    /// - Parameters:
+    ///   - normMeanRGB: Mean of the image
+    ///   - normStdRGB: Standard deviation of the image
+    /// - Returns: Normalized image
     func normalized(mean normMeanRGB: [Float32], std normStdRGB: [Float32] ) -> [Float32]? {
         guard let cgImage = self.cgImage else {
             return nil
