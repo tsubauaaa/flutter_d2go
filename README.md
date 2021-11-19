@@ -2,13 +2,13 @@
 
 # flutter_d2go
 
-Flutter Plugin inferring using [d2go](https://github.com/facebookresearch/d2go), the mobile model of [detectron2](https://github.com/facebookresearch/detectron2). Currently only Android works.
+Flutter Plugin inferring using [d2go](https://github.com/facebookresearch/d2go), the mobile model of [detectron2](https://github.com/facebookresearch/detectron2).
 
 ## Features
 
-- Providing class and boundary value box by object detection
-- Providing mask data by instance segmentation
-- Providing keypoints by keypoint estimation
+- Providing class and boundary box by object detection (Android and iOS)
+- Providing mask data by instance segmentation (Android only)
+- Providing keypoints by keypoint estimation (Android only)
 
 ## Preview
 
