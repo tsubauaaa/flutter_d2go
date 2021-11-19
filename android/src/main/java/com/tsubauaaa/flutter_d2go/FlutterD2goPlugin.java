@@ -125,9 +125,9 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
   /**
    * <p>Infer using the D2Go model, format the result and return it</>
    *
-   * @param call [image] List of bytes image to be inferred<Bytes>
-   *             [width] width length of image
-   *             [height] height length of image
+   * @param call [image] List of bytes image to be inferred
+   *             [width] width of image when inferring to d2go model
+   *             [height] height of image when inferring to d2go model
    *             [mean] Average value used in Normalize
    *             [std] Standard deviation used in Normalize
    *             [minScore] threshold
