@@ -2,6 +2,7 @@ package com.tsubauaaa.flutter_d2go;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 
 import com.facebook.soloader.nativeloader.NativeLoader;
 import com.facebook.soloader.nativeloader.SystemDelegate;
@@ -31,6 +32,8 @@ import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.PluginRegistry;
+
+import static java.util.Objects.*;
 
 
 /**
@@ -79,11 +82,12 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
       case "loadModel":
         loadModel(call, result);
         break;
-
       case "predictImage":
         predictImage(call, result);
         break;
-
+      case "predictImageOnFrame":
+        predictImageOnFrame(call, result);
+        break;
       default:
         result.notImplemented();
         break;
@@ -107,7 +111,7 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
       module = Module.load(absModelPath);
 
       String absLabelPath = call.argument("absLabelPath");
-      File labels = new File(absLabelPath);
+      File labels = new File(requireNonNull(absLabelPath));
       BufferedReader br = new BufferedReader(new FileReader(labels));
       String line;
       while ((line = br.readLine()) != null) {
@@ -123,71 +127,124 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
 
 
   /**
-   * <p>Infer using the D2Go model, format the result and return it</>
+   * <p>Create an input image from static image for inference and return the inference result to Flutter</>
    *
-   * @param call [image] List of bytes image to be inferred
-   *             [width] width of image when inferring to d2go model
-   *             [height] height of image when inferring to d2go model
-   *             [mean] Average value used in Normalize
-   *             [std] Standard deviation used in Normalize
-   *             [minScore] threshold
-   * @param result If successful, return [outputs] with result.success
-   *               The format of [outputs] is List of { "rect": { "left": Float, "top": Float, "right": Float, "bottom": Float },
-   *               "mask": [byte, byte, byte, byte, byte, byte, byte, byte, byte, byte, byte, byte, byte, byte, byte, byte, byte ...],
-   *               "keypoints": [[Float, Float], [Float, Float], [Float, Float], [Float, Float], ...],
-   *               "confidenceInClass": Float, "detectedClass": String }. "mask" and "keypoints" do not exist on some models.
+   * @param call Method call called from Flutter. Contains various arguments.
+   * @param result If successful, return a formatted the inference result with result.success
    */
   private void predictImage(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
-    Bitmap bitmap;
-    float [] mean;
-    float [] std;
-    double minScore;
-    int inputWidth;
-    int inputHeight;
-    float imageWidthScale, imageHeightScale;
-
 
     byte[] imageBytes = call.argument("image");
-
-
-    // Convert [mean] and [std] to float
-    ArrayList<Double> _mean = call.argument("mean");
-    mean = toFloatPrimitives(_mean.toArray(new Double[0]));
-    ArrayList<Double> _std = call.argument("std");
-    std = toFloatPrimitives(_std.toArray(new Double[0]));
-
-    minScore = call.argument("minScore");
-
-    inputWidth = call.argument("width");
-    inputHeight = call.argument("height");
+    ArrayList<Double> meanDouble = call.argument("mean");
+    ArrayList<Double> stdDouble = call.argument("std");
+    double minScore = call.argument("minScore");
+    int inputWidth = call.argument("width");
+    int inputHeight = call.argument("height");
 
     // Create a bitmap object from image and fit the size to the model
-    bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
+    Bitmap bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, requireNonNull(imageBytes).length);
     Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap, inputWidth, inputHeight, true);
 
     // Get the increase / decrease ratio between the bitmap and the original image
-    imageWidthScale = (float)bitmap.getWidth() / inputWidth;
-    imageHeightScale = (float)bitmap.getHeight() / inputHeight;
+    float imageWidthScale = (float)bitmap.getWidth() / inputWidth;
+    float imageHeightScale = (float)bitmap.getHeight() / inputHeight;
 
+    // Get formatted inference results
+    List<Map<String, Object>> outputs = createOutputsFromPredictions(resizedBitmap, meanDouble, stdDouble, minScore, imageWidthScale, imageHeightScale);
+
+    result.success(outputs);
+  }
+
+
+  /**
+   * <p>Create an input image from camera streaming image for inference and return the inference result to Flutter</>
+   *
+   * @param call Method call called from Flutter. Contains various arguments.
+   * @param result If successful, return a formatted the inference result with result.success
+   */
+  private void predictImageOnFrame(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
+    byte[] imageBytes = call.argument("image");
+
+//    ByteBuffer yBuffer = ByteBuffer.wrap(imageBytesList.get(0));
+//    ByteBuffer uBuffer = ByteBuffer.wrap(imageBytesList.get(1));
+//    ByteBuffer vBuffer = ByteBuffer.wrap(imageBytesList.get(2));
+//
+//    int ySize = yBuffer.remaining();
+//    int uSize = uBuffer.remaining();
+//    int vSize = vBuffer.remaining();
+//
+//    byte[] nv21 = new byte[ySize + uSize + vSize];
+//
+//    yBuffer.get(nv21, 0, ySize);
+//    vBuffer.get(nv21, ySize, vSize);
+//    uBuffer.get(nv21, ySize + vSize, uSize);
+//
+//    YuvImage yuvImage = new YuvImage(nv21, ImageFormat.NV21, 720, 1280, null);
+//    ByteArrayOutputStream out = new ByteArrayOutputStream();
+//    yuvImage.compressToJpeg(new Rect(0, 0, yuvImage.getWidth(), yuvImage.getHeight()), 75, out);
+//
+//    byte[] imageBytes = out.toByteArray();
+
+    ArrayList<Double> meanDouble = call.argument("mean");
+    ArrayList<Double> stdDouble = call.argument("std");
+    double minScore = call.argument("minScore");
+
+    // Create a bitmap object from the image and add orientation by 90 degrees
+    Bitmap bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, requireNonNull(imageBytes).length);
+    Matrix matrix = new Matrix();
+    matrix.postRotate(90.0f);
+    Bitmap orientedBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+
+    Log.i("flutter_d2go", Integer.toString(orientedBitmap.getWidth()));
+    Log.i("flutter_d2go", Integer.toString(orientedBitmap.getHeight()));
+
+    // Get formatted inference results
+    List<Map<String, Object>> outputs = createOutputsFromPredictions(orientedBitmap, meanDouble, stdDouble, minScore, 1.0f, 1.0f);
+
+    result.success(outputs);
+  }
+
+  /**
+   * <p>Infer using the D2Go model, format the result and return it</>
+   *
+   * @param bitmap Bitmap formatted for inference
+   * @param meanDouble Average value used in Normalize
+   * @param stdDouble Standard deviation used in Normalize
+   * @param minScore If this threshold is not met, it will not be included in the results
+   * @param imageWidthScale the increase / decrease ratio of width between the formatted bitmap and the original image
+   * @param imageHeightScale the increase / decrease ratio of height between the formatted bitmap and the original image
+   * @return A formatted version of the inference result
+   *         The format is List of { "rect": { "left": Float, "top": Float, "right": Float, "bottom": Float },
+   *                                 "mask": [byte, byte, byte, byte, byte, byte, byte, byte, byte, byte, byte, byte, byte, byte, byte, byte, byte ...],
+   *                                 "keypoints": [[Float, Float], [Float, Float], [Float, Float], [Float, Float], ...],
+   *                                 "confidenceInClass": Float, "detectedClass": String }. "mask" and "keypoints" do not exist on some models.
+   */
+  private List<Map<String, Object>> createOutputsFromPredictions(Bitmap bitmap, ArrayList<Double> meanDouble, ArrayList<Double> stdDouble, double minScore, float imageWidthScale, float imageHeightScale ) {
+
+    // Convert [mean] and [std] to float
+    float[] mean = toFloatPrimitives(requireNonNull(meanDouble).toArray(new Double[0]));
+    float[] std = toFloatPrimitives(requireNonNull(stdDouble).toArray(new Double[0]));
 
     // Create a dtype torch.float32 tensor to input to the model with [inputWidth], [inputHeight] size and bitmap data
-    final FloatBuffer floatBuffer = Tensor.allocateFloatBuffer(3 * resizedBitmap.getWidth() * resizedBitmap.getHeight());
-    TensorImageUtils.bitmapToFloatBuffer(resizedBitmap,0,0, resizedBitmap.getWidth(), resizedBitmap.getHeight(), mean, std, floatBuffer, 0);
-    final Tensor inputTensor = Tensor.fromBlob(floatBuffer, new long[] {3, resizedBitmap.getHeight(), resizedBitmap.getWidth()});
+    final FloatBuffer floatBuffer = Tensor.allocateFloatBuffer(3 * bitmap.getWidth() * bitmap.getHeight());
+    TensorImageUtils.bitmapToFloatBuffer(bitmap,0,0, bitmap.getWidth(), bitmap.getHeight(), mean, std, floatBuffer, 0);
+    final Tensor inputTensor = Tensor.fromBlob(floatBuffer, new long[] {3, bitmap.getHeight(), bitmap.getWidth()});
 
     // inference
     IValue[] outputTuple = module.forward(IValue.listFrom(inputTensor)).toTuple();
 
     final Map<String, IValue> map = outputTuple[1].toList()[0].toDictStringKey();
 
+    List<Map<String, Object>> outputs = new ArrayList<>();
+
     // Formatting inference results
     if (map.containsKey("boxes")) {
       final boolean hasMasks = map.containsKey("masks");
       final boolean hasKeypoints = map.containsKey("keypoints");
 
-      final Tensor boxesTensor = map.get("boxes").toTensor();
-      final Tensor scoresTensor = map.get("scores").toTensor();
-      final Tensor labelsTensor = map.get("labels").toTensor();
+      final Tensor boxesTensor = requireNonNull(map.get("boxes")).toTensor();
+      final Tensor scoresTensor = requireNonNull(map.get("scores")).toTensor();
+      final Tensor labelsTensor = requireNonNull(map.get("labels")).toTensor();
 
       // [boxesData] has 4 sets of left, top, right and bottom per instance
       // boxesData = [left1, top1, right1, bottom1, left2, top2, right2, bottom2, left3, top3, ..., bottomN]
@@ -198,7 +255,6 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
       // Inferred number of all instances
       final int totalInstances = scoresData.length;
 
-      List<Map<String, Object>> outputs = new ArrayList<>();
       for (int i = 0; i < totalInstances; i++) {
         if (scoresData[i] < minScore)
           continue;
@@ -216,14 +272,14 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
         if (hasMasks) {
           // [rawMaskData] is the instance mask data in the bounding box and has a size of 28 * 28
           // @see <a href="https://github.com/facebookresearch/detectron2/discussions/3393">https://github.com/facebookresearch/detectron2/discussions/3393</a>
-          final Tensor rawMasksTensor = map.get("masks").toTensor();
+          final Tensor rawMasksTensor = requireNonNull(map.get("masks")).toTensor();
           final float[] rawMasksData = rawMasksTensor.getDataAsFloatArray();
           output.put("mask", getMaskBytes(rawMasksData, i));
         }
 
         if (hasKeypoints) {
           // keypointsData is in a format with 17 * (x, y, score) for each instance. (coco estimates have 17 keypoints)
-          final Tensor keypointsTensor = map.get("keypoints").toTensor();
+          final Tensor keypointsTensor = requireNonNull(map.get("keypoints")).toTensor();
           final float[] keypointsData = keypointsTensor.getDataAsFloatArray();
           output.put("keypoints", getKeypointsList(keypointsData, i, bitmap.getWidth(), bitmap.getHeight()));
         }
@@ -233,11 +289,9 @@ public class FlutterD2goPlugin implements FlutterPlugin, MethodCallHandler {
 
         outputs.add(output);
       }
-
-      result.success(outputs);
     }
+    return outputs;
   }
-
 
   /**
    * <p>Converts mask data to byte array of bitmap image and returns</>

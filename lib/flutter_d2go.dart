@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
 import 'package:path/path.dart';
@@ -78,6 +79,25 @@ class FlutterD2go {
         'image': image.readAsBytesSync(),
         'width': width,
         'height': height,
+        'mean': mean,
+        'std': std,
+        'minScore': minScore,
+      },
+    );
+
+    return prediction;
+  }
+
+  static Future<List> getImagePredictionOnFrame({
+    required Uint8List image,
+    List<double> mean = kTorchvisionNormMeanRGB,
+    List<double> std = kTorchvisionNormStdRGB,
+    double minScore = kMinScore,
+  }) async {
+    final List prediction = await _channel.invokeMethod(
+      'predictImageOnFrame',
+      {
+        'image': image,
         'mean': mean,
         'std': std,
         'minScore': minScore,
