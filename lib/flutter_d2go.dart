@@ -89,7 +89,7 @@ class FlutterD2go {
   }
 
   static Future<List> getImagePredictionOnFrame({
-    required Uint8List image,
+    required Map image,
     List<double> mean = kTorchvisionNormMeanRGB,
     List<double> std = kTorchvisionNormStdRGB,
     double minScore = kMinScore,

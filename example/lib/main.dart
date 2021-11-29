@@ -76,13 +76,8 @@ class _MyAppState extends State<MyApp> {
 
       _isDetecting = true;
 
-      List<int>? bytes = await convertImagetoPng(cameraImage);
-
-      final image = Uint8List.fromList(bytes!);
-
       await FlutterD2go.getImagePredictionOnFrame(
-        image: image,
-        // image: cameraImage.planes.map((plane) => plane.bytes).toList(),
+        image: cameraImagetoMap(cameraImage),
         minScore: 0.8,
       ).then((predictions) {
         List<RecognitionModel>? recognitions;
@@ -189,6 +184,24 @@ class _MyAppState extends State<MyApp> {
     }
 
     return img;
+  }
+
+  Map cameraImagetoMap(CameraImage image) {
+    var imageMap = {};
+    imageMap['planes'] = List.filled(3, {}, growable: false);
+    for (int i = 0; i < image.planes.length; i++) {
+      var value = {};
+      value['bytes'] = image.planes[i].bytes;
+      value['bytesPerPixel'] = image.planes[i].bytesPerPixel;
+      value['height'] = image.planes[i].height;
+      value['width'] = image.planes[i].width;
+      imageMap['planes'][i] = value;
+    }
+    imageMap['height'] = image.height;
+    imageMap['width'] = image.width;
+    imageMap['rotation'] = 90;
+
+    return imageMap;
   }
 
   Future loadModel() async {
