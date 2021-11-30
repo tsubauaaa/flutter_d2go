@@ -127,7 +127,7 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future loadModel() async {
-    String modelPath = 'assets/models/d2go_mask.pt';
+    String modelPath = 'assets/models/d2go.pt';
     String labelPath = 'assets/models/classes.txt';
     try {
       await FlutterD2go.loadModel(
@@ -276,7 +276,7 @@ class _MyAppState extends State<MyApp> {
           ),
           const SizedBox(height: 48),
           MyButton(
-            onPressed: detect,
+            onPressed: !_isLiveModeOn ? detect : null,
             text: 'Detect',
           ),
           Padding(
@@ -307,11 +307,9 @@ class _MyAppState extends State<MyApp> {
                     text: 'Select'),
                 MyButton(
                     onPressed: () async {
-                      if (_isLiveModeOn) {
-                        await controller!.stopImageStream();
-                      } else {
-                        await startCameraStream();
-                      }
+                      _isLiveModeOn
+                          ? await controller!.stopImageStream()
+                          : await startCameraStream();
                       setState(
                         () {
                           _recognitions = null;
@@ -334,7 +332,7 @@ class MyButton extends StatelessWidget {
   const MyButton({Key? key, required this.onPressed, required this.text})
       : super(key: key);
 
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final String text;
 
   @override
