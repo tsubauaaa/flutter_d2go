@@ -68,8 +68,8 @@ public class FlutterD2goHandler implements MethodChannel.MethodCallHandler {
             case "predictImage":
                 predictImage(call, result);
                 break;
-            case "predictImageOnFrame":
-                predictImageOnFrame(call, result);
+            case "predictImageStream":
+                predictImageStream(call, result);
                 break;
             default:
                 result.notImplemented();
@@ -145,7 +145,7 @@ public class FlutterD2goHandler implements MethodChannel.MethodCallHandler {
      * @param call Method call called from Flutter. Contains various arguments.
      * @param result If successful, return a formatted the inference result with result.success
      */
-    private void predictImageOnFrame(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
+    private void predictImageStream(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
         HashMap image = call.argument("image");
         ArrayList<Double> meanDouble = call.argument("mean");
         ArrayList<Double> stdDouble = call.argument("std");

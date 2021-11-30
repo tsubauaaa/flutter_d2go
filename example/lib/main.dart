@@ -75,8 +75,11 @@ class _MyAppState extends State<MyApp> {
 
       _isDetecting = true;
 
-      await FlutterD2go.getImagePredictionOnFrame(
+      await FlutterD2go.getImageStreamPrediction(
         image: cameraImagetoMap(cameraImage),
+        imageBytes: cameraImage.planes.map((plane) => plane.bytes).toList(),
+        imageBytesPerPixel:
+            cameraImage.planes.map((plane) => plane.bytesPerPixel).toList(),
         width: cameraImage.width,
         height: cameraImage.height,
         minScore: 0.8,

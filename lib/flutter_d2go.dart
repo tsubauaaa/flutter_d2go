@@ -91,8 +91,10 @@ class FlutterD2go {
     return prediction;
   }
 
-  static Future<List> getImagePredictionOnFrame({
+  static Future<List> getImageStreamPrediction({
     required Map image,
+    required List<Uint8List> imageBytes,
+    required List<int?> imageBytesPerPixel,
     int width = kWidth,
     int height = kHeight,
     int inputWidth = kInputWidth,
@@ -103,9 +105,11 @@ class FlutterD2go {
     int rotation = kRotation,
   }) async {
     final List prediction = await _channel.invokeMethod(
-      'predictImageOnFrame',
+      'predictImageStream',
       {
         'image': image,
+        'imageBytes': imageBytes,
+        'imageBytesPerPixel': imageBytesPerPixel,
         'width': width,
         'height': height,
         'inputWidth': inputWidth,
