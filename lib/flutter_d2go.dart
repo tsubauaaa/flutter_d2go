@@ -8,8 +8,8 @@ import 'package:path_provider/path_provider.dart';
 
 const kTorchvisionNormMeanRGB = [0.0, 0.0, 0.0];
 const kTorchvisionNormStdRGB = [1.0, 1.0, 1.0];
-const kInputWidth = 640;
-const kInputHeight = 640;
+const kInputWidth = 320;
+const kInputHeight = 320;
 const kMinScore = 0.5;
 
 class FlutterD2go {
@@ -67,8 +67,8 @@ class FlutterD2go {
   /// A method that calls predictImage with invokeMethod to predict
   static Future<List> getImagePrediction({
     required File image,
-    int width = kInputWidth,
-    int height = kInputHeight,
+    int inputWidth = kInputWidth,
+    int inputHeight = kInputHeight,
     List<double> mean = kTorchvisionNormMeanRGB,
     List<double> std = kTorchvisionNormStdRGB,
     double minScore = kMinScore,
@@ -77,8 +77,8 @@ class FlutterD2go {
       'predictImage',
       {
         'image': image.readAsBytesSync(),
-        'width': width,
-        'height': height,
+        'inputWidth': inputWidth,
+        'inputHeight': inputHeight,
         'mean': mean,
         'std': std,
         'minScore': minScore,
@@ -90,6 +90,8 @@ class FlutterD2go {
 
   static Future<List> getImagePredictionOnFrame({
     required Map image,
+    int inputWidth = kInputWidth,
+    int inputHeight = kInputHeight,
     List<double> mean = kTorchvisionNormMeanRGB,
     List<double> std = kTorchvisionNormStdRGB,
     double minScore = kMinScore,
@@ -98,6 +100,8 @@ class FlutterD2go {
       'predictImageOnFrame',
       {
         'image': image,
+        'inputWidth': inputWidth,
+        'inputHeight': inputHeight,
         'mean': mean,
         'std': std,
         'minScore': minScore,

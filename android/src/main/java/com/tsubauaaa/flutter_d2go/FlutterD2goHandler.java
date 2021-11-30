@@ -121,8 +121,8 @@ public class FlutterD2goHandler implements MethodChannel.MethodCallHandler {
         ArrayList<Double> meanDouble = call.argument("mean");
         ArrayList<Double> stdDouble = call.argument("std");
         double minScore = call.argument("minScore");
-        int inputWidth = call.argument("width");
-        int inputHeight = call.argument("height");
+        int inputWidth = call.argument("inputWidth");
+        int inputHeight = call.argument("inputHeight");
 
         // Create a bitmap object from image and fit the size to the model
         Bitmap bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, requireNonNull(imageBytes).length);
@@ -150,12 +150,11 @@ public class FlutterD2goHandler implements MethodChannel.MethodCallHandler {
         ArrayList<Double> meanDouble = call.argument("mean");
         ArrayList<Double> stdDouble = call.argument("std");
         double minScore = call.argument("minScore");
+        int inputWidth = call.argument("inputWidth");
+        int inputHeight = call.argument("inputHeight");
 
         // Create a bitmap object from the image and add orientation by 90 degrees
-        Bitmap orientedBitmap = getBitmap(image);
-
-        Log.i("flutter_d2go", Integer.toString(orientedBitmap.getWidth()));
-        Log.i("flutter_d2go", Integer.toString(orientedBitmap.getHeight()));
+        Bitmap orientedBitmap = getBitmap(image, inputWidth, inputHeight);
 
         // Get formatted inference results
         List<Map<String, Object>> outputs = createOutputsFromPredictions(orientedBitmap, meanDouble, stdDouble, minScore, 1.0f, 1.0f);
@@ -164,8 +163,8 @@ public class FlutterD2goHandler implements MethodChannel.MethodCallHandler {
     }
 
 
-    public Bitmap getBitmap(HashMap image){
-        Bitmap bitmap = Bitmap.createScaledBitmap(yuv420toBitMap(image), 1280, 720, true);
+    public Bitmap getBitmap(HashMap image, int inputWidth, int inputHeight){
+        Bitmap bitmap = Bitmap.createScaledBitmap(yuv420toBitMap(image), inputWidth, inputHeight, true);
         int width = bitmap.getWidth();
         int height = bitmap.getHeight();
         Matrix matrix = new Matrix();
