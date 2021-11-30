@@ -77,6 +77,8 @@ class _MyAppState extends State<MyApp> {
 
       await FlutterD2go.getImagePredictionOnFrame(
         image: cameraImagetoMap(cameraImage),
+        width: cameraImage.width,
+        height: cameraImage.height,
         minScore: 0.8,
       ).then((predictions) {
         List<RecognitionModel>? recognitions;
@@ -102,8 +104,8 @@ class _MyAppState extends State<MyApp> {
           ).toList();
         }
         setState(() {
-          // With android, the inference result of the camera storyming image is tilted 90 degrees,
-          // so the vertical and horizontal directions are uneven.
+          // With android, the inference result of the camera streaming image is tilted 90 degrees,
+          // so the vertical and horizontal directions are reversed.
           _imageWidth = cameraImage.height;
           _imageHeight = cameraImage.width;
           _recognitions = recognitions;
@@ -128,12 +130,8 @@ class _MyAppState extends State<MyApp> {
       var value = {};
       value['bytes'] = image.planes[i].bytes;
       value['bytesPerPixel'] = image.planes[i].bytesPerPixel;
-      value['height'] = image.planes[i].height;
-      value['width'] = image.planes[i].width;
       imageMap['planes'][i] = value;
     }
-    imageMap['height'] = image.height;
-    imageMap['width'] = image.width;
     imageMap['rotation'] = 90;
 
     return imageMap;

@@ -8,6 +8,8 @@ import 'package:path_provider/path_provider.dart';
 
 const kTorchvisionNormMeanRGB = [0.0, 0.0, 0.0];
 const kTorchvisionNormStdRGB = [1.0, 1.0, 1.0];
+const kWidth = 720;
+const kHeight = 1280;
 const kInputWidth = 320;
 const kInputHeight = 320;
 const kMinScore = 0.5;
@@ -90,6 +92,8 @@ class FlutterD2go {
 
   static Future<List> getImagePredictionOnFrame({
     required Map image,
+    int width = kWidth,
+    int height = kHeight,
     int inputWidth = kInputWidth,
     int inputHeight = kInputHeight,
     List<double> mean = kTorchvisionNormMeanRGB,
@@ -100,6 +104,8 @@ class FlutterD2go {
       'predictImageOnFrame',
       {
         'image': image,
+        'width': width,
+        'height': height,
         'inputWidth': inputWidth,
         'inputHeight': inputHeight,
         'mean': mean,

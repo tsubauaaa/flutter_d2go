@@ -150,32 +150,35 @@ public class FlutterD2goHandler implements MethodChannel.MethodCallHandler {
         ArrayList<Double> meanDouble = call.argument("mean");
         ArrayList<Double> stdDouble = call.argument("std");
         double minScore = call.argument("minScore");
+        int width = call.argument("width");
+        int height = call.argument("height");
         int inputWidth = call.argument("inputWidth");
         int inputHeight = call.argument("inputHeight");
 
         // Create a bitmap object from the image and add orientation by 90 degrees
-        Bitmap orientedBitmap = getBitmap(image, inputWidth, inputHeight);
+        Bitmap orientedBitmap = getBitmap(image, width, height, inputWidth, inputHeight);
+
+        // Get the increase / decrease ratio between the bitmap and the original image
+        // the camera streaming image is tilted 90 degrees, so the vertical and horizontal directions are reversed
+        float imageWidthScale = (float) height / inputWidth;
+        float imageHeightScale = (float) width / inputHeight;
 
         // Get formatted inference results
-        List<Map<String, Object>> outputs = createOutputsFromPredictions(orientedBitmap, meanDouble, stdDouble, minScore, 1.0f, 1.0f);
+        List<Map<String, Object>> outputs = createOutputsFromPredictions(orientedBitmap, meanDouble, stdDouble, minScore, imageWidthScale, imageHeightScale);
 
         result.success(outputs);
     }
 
 
-    public Bitmap getBitmap(HashMap image, int inputWidth, int inputHeight){
-        Bitmap bitmap = Bitmap.createScaledBitmap(yuv420toBitMap(image), inputWidth, inputHeight, true);
-        int width = bitmap.getWidth();
-        int height = bitmap.getHeight();
+    public Bitmap getBitmap(HashMap image, int width, int height, int inputWidth, int inputHeight){
+        Bitmap bitmap = Bitmap.createScaledBitmap(yuv420toBitMap(image, width, height), inputWidth, inputHeight, true);
         Matrix matrix = new Matrix();
         matrix.postRotate((Integer)image.get("rotation"));
-        return Bitmap.createBitmap(bitmap   , 0, 0, width, height, matrix, true);
+        return Bitmap.createBitmap(bitmap, 0, 0, inputWidth, inputHeight, matrix, true);
     }
 
 
-    public Bitmap yuv420toBitMap(final HashMap image) {
-        int w = (int) image.get("width");
-        int h = (int) image.get("height");
+    public Bitmap yuv420toBitMap(final HashMap image, int w, int h) {
         ArrayList<Map> planes = (ArrayList) image.get("planes");
 
         byte[] data = yuv420toNV21(w, h, planes);
