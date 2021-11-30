@@ -80,6 +80,7 @@ class _MyAppState extends State<MyApp> {
         width: cameraImage.width,
         height: cameraImage.height,
         minScore: 0.8,
+        rotation: 90,
       ).then((predictions) {
         List<RecognitionModel>? recognitions;
         if (predictions.isNotEmpty) {
@@ -132,7 +133,6 @@ class _MyAppState extends State<MyApp> {
       value['bytesPerPixel'] = image.planes[i].bytesPerPixel;
       imageMap['planes'][i] = value;
     }
-    imageMap['rotation'] = 90;
 
     return imageMap;
   }

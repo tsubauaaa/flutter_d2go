@@ -13,6 +13,7 @@ const kHeight = 1280;
 const kInputWidth = 320;
 const kInputHeight = 320;
 const kMinScore = 0.5;
+const kRotation = 0;
 
 class FlutterD2go {
   static const MethodChannel _channel =
@@ -99,6 +100,7 @@ class FlutterD2go {
     List<double> mean = kTorchvisionNormMeanRGB,
     List<double> std = kTorchvisionNormStdRGB,
     double minScore = kMinScore,
+    int rotation = kRotation,
   }) async {
     final List prediction = await _channel.invokeMethod(
       'predictImageOnFrame',
@@ -111,6 +113,7 @@ class FlutterD2go {
         'mean': mean,
         'std': std,
         'minScore': minScore,
+        'rotation': rotation,
       },
     );
 

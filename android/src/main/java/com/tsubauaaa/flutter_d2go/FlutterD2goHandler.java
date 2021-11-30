@@ -154,9 +154,10 @@ public class FlutterD2goHandler implements MethodChannel.MethodCallHandler {
         int height = call.argument("height");
         int inputWidth = call.argument("inputWidth");
         int inputHeight = call.argument("inputHeight");
+        int rotation = call.argument("rotation");
 
         // Create a bitmap object from the image and add orientation by 90 degrees
-        Bitmap orientedBitmap = getBitmap(image, width, height, inputWidth, inputHeight);
+        Bitmap orientedBitmap = getBitmap(image, width, height, inputWidth, inputHeight, rotation);
 
         // Get the increase / decrease ratio between the bitmap and the original image
         // the camera streaming image is tilted 90 degrees, so the vertical and horizontal directions are reversed
@@ -170,10 +171,10 @@ public class FlutterD2goHandler implements MethodChannel.MethodCallHandler {
     }
 
 
-    public Bitmap getBitmap(HashMap image, int width, int height, int inputWidth, int inputHeight){
+    public Bitmap getBitmap(HashMap image, int width, int height, int inputWidth, int inputHeight, int rotation){
         Bitmap bitmap = Bitmap.createScaledBitmap(yuv420toBitMap(image, width, height), inputWidth, inputHeight, true);
         Matrix matrix = new Matrix();
-        matrix.postRotate((Integer)image.get("rotation"));
+        matrix.postRotate(rotation);
         return Bitmap.createBitmap(bitmap, 0, 0, inputWidth, inputHeight, matrix, true);
     }
 
