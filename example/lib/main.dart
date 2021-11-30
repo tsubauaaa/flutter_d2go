@@ -80,6 +80,7 @@ class _MyAppState extends State<MyApp> {
         width: cameraImage.width,
         height: cameraImage.height,
         minScore: 0.8,
+        rotation: 90,
       ).then((predictions) {
         List<RecognitionModel>? recognitions;
         if (predictions.isNotEmpty) {
