@@ -76,8 +76,7 @@ class _MyAppState extends State<MyApp> {
       _isDetecting = true;
 
       await FlutterD2go.getImageStreamPrediction(
-        image: cameraImagetoMap(cameraImage),
-        imageBytes: cameraImage.planes.map((plane) => plane.bytes).toList(),
+        imageBytesList: cameraImage.planes.map((plane) => plane.bytes).toList(),
         imageBytesPerPixel:
             cameraImage.planes.map((plane) => plane.bytesPerPixel).toList(),
         width: cameraImage.width,
@@ -125,19 +124,6 @@ class _MyAppState extends State<MyApp> {
         ),
       );
     });
-  }
-
-  Map cameraImagetoMap(CameraImage image) {
-    var imageMap = {};
-    imageMap['planes'] = List.filled(3, {}, growable: false);
-    for (int i = 0; i < image.planes.length; i++) {
-      var value = {};
-      value['bytes'] = image.planes[i].bytes;
-      value['bytesPerPixel'] = image.planes[i].bytesPerPixel;
-      imageMap['planes'][i] = value;
-    }
-
-    return imageMap;
   }
 
   Future loadModel() async {

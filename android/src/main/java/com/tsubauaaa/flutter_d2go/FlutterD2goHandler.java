@@ -146,7 +146,20 @@ public class FlutterD2goHandler implements MethodChannel.MethodCallHandler {
      * @param result If successful, return a formatted the inference result with result.success
      */
     private void predictImageStream(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
-        HashMap image = call.argument("image");
+        ArrayList<byte[]> imageBytesList = call.argument("imageBytesList");
+        ArrayList<Integer> imageBytesPerPixel = call.argument("imageBytesPerPixel");
+
+        HashMap image = new HashMap<>();
+        ArrayList planes = new ArrayList<Map<String, Object>>(Arrays.asList(new LinkedHashMap<>(), new LinkedHashMap<>(), new LinkedHashMap<>()));
+        for (int i = 0; i < planes.size(); i++) {
+            Map<String, Object> value = new LinkedHashMap<>();
+            value.put("bytes", imageBytesList.get(i));
+            value.put("bytesPerPixel", imageBytesPerPixel.get(i));
+            planes.set(i, value);
+        }
+        image.put("planes", planes);
+
+
         ArrayList<Double> meanDouble = call.argument("mean");
         ArrayList<Double> stdDouble = call.argument("std");
         double minScore = call.argument("minScore");

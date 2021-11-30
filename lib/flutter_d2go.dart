@@ -92,8 +92,7 @@ class FlutterD2go {
   }
 
   static Future<List> getImageStreamPrediction({
-    required Map image,
-    required List<Uint8List> imageBytes,
+    required List<Uint8List> imageBytesList,
     required List<int?> imageBytesPerPixel,
     int width = kWidth,
     int height = kHeight,
@@ -107,8 +106,7 @@ class FlutterD2go {
     final List prediction = await _channel.invokeMethod(
       'predictImageStream',
       {
-        'image': image,
-        'imageBytes': imageBytes,
+        'imageBytesList': imageBytesList,
         'imageBytesPerPixel': imageBytesPerPixel,
         'width': width,
         'height': height,
