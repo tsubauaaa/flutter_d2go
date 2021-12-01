@@ -8,7 +8,7 @@ import io.flutter.plugin.common.MethodChannel;
 /**
  * <p>FlutterD2goPlugin</>
  *
- * This class is a class that infers using the d2go model
+ * A class that sets MethodCallHandler that performs D2Go inference processing in flutter plugin MethodChannel.
  */
 public class FlutterD2goPlugin implements FlutterPlugin {
 

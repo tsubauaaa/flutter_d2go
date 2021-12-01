@@ -39,6 +39,11 @@ import io.flutter.plugin.common.MethodChannel;
 
 import static java.util.Objects.requireNonNull;
 
+/**
+ * <p>FlutterD2goHandler</>
+ *
+ * Handler class that performs D2Go inference processing.
+ */
 public class FlutterD2goHandler implements MethodChannel.MethodCallHandler {
     private final Context context;
 
