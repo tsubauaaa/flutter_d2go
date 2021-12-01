@@ -18,7 +18,6 @@ import java.io.FileReader;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -149,10 +148,10 @@ public class FlutterD2goHandler implements MethodChannel.MethodCallHandler {
         ArrayList<Double> stdDouble = call.argument("std");
         double minScore = call.argument("minScore");
 
-        BitmapUtils bitmapUtils = new BitmapUtils(context);
+        BitmapUtils bitmapUtils = new BitmapUtils(call, context);
 
         // Create a bitmap object from the imageMap and add fit the size to the model and orientation by 90 degrees
-        Bitmap resizedBitmap = bitmapUtils.getBitmap(createImageMap(call), inputWidth, inputHeight);
+        Bitmap resizedBitmap = bitmapUtils.getBitmap(inputWidth, inputHeight);
 
         // Get the increase / decrease ratio between the bitmap and the original imageMap
         // the camera streaming imageMap is tilted 90 degrees, so the vertical and horizontal directions are reversed
@@ -161,40 +160,6 @@ public class FlutterD2goHandler implements MethodChannel.MethodCallHandler {
 
         // Get formatted inference results and register in result.success
         result.success(createOutputsFromPredictions(resizedBitmap, meanDouble, stdDouble, minScore, imageWidthScale, imageHeightScale));
-    }
-
-    /**
-     * <p>Create camera streaming images and metadata for Bitmap image creation for inference</>
-     *
-     * @param call Method call called from Flutter. Contains various arguments.
-     * @return Map of camera streaming images and metadata.
-     *         The elements are
-     *                      `planes` Map containing bytes (byte []) and bytesPerPixel (Integer).
-     *                      `width` Width size (int) of the image to be inferred.
-     *                      `height` Height size (int) of the image to be inferred.
-     *                      `rotation` Tilt (int) according to the orientation of the image to be inferred.
-     */
-    private HashMap createImageMap(@NonNull MethodCall call){
-        ArrayList<byte[]> imageBytesList = call.argument("imageBytesList");
-        ArrayList<Integer> imageBytesPerPixel = call.argument("imageBytesPerPixel");
-        int width = call.argument("width");
-        int height = call.argument("height");
-        int rotation = call.argument("rotation");
-        HashMap imageMap = new HashMap<>();
-        ArrayList planes = new ArrayList<Map<String, Object>>(Arrays.asList(new LinkedHashMap<>(), new LinkedHashMap<>(), new LinkedHashMap<>()));
-        for (int i = 0; i < planes.size(); i++) {
-            Map<String, Object> value = new LinkedHashMap<>();
-            value.put("bytes", imageBytesList.get(i));
-            value.put("bytesPerPixel", imageBytesPerPixel.get(i));
-            planes.set(i, value);
-        }
-
-        imageMap.put("planes", planes);
-        imageMap.put("width", width);
-        imageMap.put("height", height);
-        imageMap.put("rotation", rotation);
-
-        return imageMap;
     }
 
     /**

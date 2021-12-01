@@ -12,8 +12,13 @@ import android.renderscript.Type;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
+
+import androidx.annotation.NonNull;
+import io.flutter.plugin.common.MethodCall;
 
 /**
  * <p>BitmapUtils</>
@@ -23,22 +28,54 @@ import java.util.Map;
 public class BitmapUtils {
 
     private static Context context;
+    private static HashMap imageMap;
 
-    public BitmapUtils(Context context) {
+    /**
+     * <p>Constructor to initialize imageMap and context of member variables</>
+     *
+     * @param call Method call called from Flutter. Contains various arguments.
+     * @param context Used in renderscript.
+     * The member variable imageMap is a map of camera streaming images and metadata.
+     * The elements are
+     *           `planes` Map containing bytes (byte []) and bytesPerPixel (Integer).
+     *           `width` Width size (int) of the image to be inferred.
+     *           `height` Height size (int) of the image to be inferred.
+     *           `rotation` Tilt (int) according to the orientation of the image to be inferred.
+     */
+    public BitmapUtils(@NonNull MethodCall call, @NonNull Context context) {
         this.context = context;
+        ArrayList<byte[]> imageBytesList = call.argument("imageBytesList");
+        ArrayList<Integer> imageBytesPerPixel = call.argument("imageBytesPerPixel");
+        int width = call.argument("width");
+        int height = call.argument("height");
+        int rotation = call.argument("rotation");
+        HashMap imageMap = new HashMap<>();
+        ArrayList planes = new ArrayList<Map<String, Object>>(Arrays.asList(new LinkedHashMap<>(), new LinkedHashMap<>(), new LinkedHashMap<>()));
+        for (int i = 0; i < planes.size(); i++) {
+            Map<String, Object> value = new LinkedHashMap<>();
+            value.put("bytes", imageBytesList.get(i));
+            value.put("bytesPerPixel", imageBytesPerPixel.get(i));
+            planes.set(i, value);
+        }
+
+        imageMap.put("planes", planes);
+        imageMap.put("width", width);
+        imageMap.put("height", height);
+        imageMap.put("rotation", rotation);
+
+        this.imageMap = imageMap;
     }
 
     /**
      * <p>Convert to Bitmap for inferring from imageMap</>
      *
-     * @param imageMap Map of camera streaming images and metadata.
      * @param inputWidth Width size for inference image resizing.
      * @param inputHeight Height size for inference image resizing.
      * @return Bitmap for inference converted from imagemap
      */
-    public static Bitmap getBitmap(HashMap imageMap, int inputWidth, int inputHeight){
+    public static Bitmap getBitmap(int inputWidth, int inputHeight){
         // Resize bitmap for inference
-        Bitmap bitmap = Bitmap.createScaledBitmap(yuv420toBitMap(imageMap), inputWidth, inputHeight, true);
+        Bitmap bitmap = Bitmap.createScaledBitmap(yuv420toBitMap(), inputWidth, inputHeight, true);
 
         // Tilt the bitmap 90 degrees, taking into account the impact of orientation
         Matrix matrix = new Matrix();
@@ -50,10 +87,9 @@ public class BitmapUtils {
     /**
      * <p>Convert imageMap to YUV420 NV21 format byte[] and convert to Bitmap</>
      *
-     * @param imageMap Map of camera streaming images and metadata.
      * @return Bitmap converted from imageMap.
      */
-    private static Bitmap yuv420toBitMap(final HashMap imageMap) {
+    private static Bitmap yuv420toBitMap() {
         ArrayList<Map> planes = (ArrayList) imageMap.get("planes");
         int w = (int) imageMap.get("width");
         int h = (int)imageMap.get("height");
