@@ -220,10 +220,10 @@ public class FlutterD2goHandler implements MethodChannel.MethodCallHandler {
 
 
     /**
-     * <p></>
+     * <p>Convert imageMap to YUV420 NV21 format byte[] and convert to Bitmap</>
      *
      * @param imageMap Map of camera streaming images and metadata.
-     * @return
+     * @return Bitmap converted from imageMap.
      */
     private Bitmap yuv420toBitMap(final HashMap imageMap) {
         ArrayList<Map> planes = (ArrayList) imageMap.get("planes");
@@ -252,12 +252,12 @@ public class FlutterD2goHandler implements MethodChannel.MethodCallHandler {
 
 
     /**
-     * <p></>
+     * <p>Convert camera streaming images to YUV420 NV21 format byte[]</>
      *
      * @param width Width size of the image to be inferred.
      * @param height Height size of the image to be inferred
      * @param planes Plain data of the image to be inferred.
-     * @return
+     * @return YUV420 NV21 format byte [] converted from camera streaming images.
      */
     private byte[] yuv420toNV21(int width,int height, ArrayList<Map> planes){
         byte[] yBytes = (byte[]) planes.get(0).get("bytes"),
