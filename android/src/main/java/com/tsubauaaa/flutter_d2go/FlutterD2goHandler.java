@@ -3,12 +3,6 @@ package com.tsubauaaa.flutter_d2go;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Matrix;
-import android.renderscript.Allocation;
-import android.renderscript.Element;
-import android.renderscript.RenderScript;
-import android.renderscript.ScriptIntrinsicYuvToRGB;
-import android.renderscript.Type;
 
 import com.facebook.soloader.nativeloader.NativeLoader;
 import com.facebook.soloader.nativeloader.SystemDelegate;
@@ -19,10 +13,8 @@ import org.pytorch.Tensor;
 import org.pytorch.torchvision.TensorImageUtils;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
-import java.io.IOException;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -137,10 +129,8 @@ public class FlutterD2goHandler implements MethodChannel.MethodCallHandler {
         float imageWidthScale = (float)bitmap.getWidth() / inputWidth;
         float imageHeightScale = (float)bitmap.getHeight() / inputHeight;
 
-        // Get formatted inference results
-        List<Map<String, Object>> outputs = createOutputsFromPredictions(resizedBitmap, meanDouble, stdDouble, minScore, imageWidthScale, imageHeightScale);
-
-        result.success(outputs);
+        // Get formatted inference results and register in result.success
+        result.success(createOutputsFromPredictions(resizedBitmap, meanDouble, stdDouble, minScore, imageWidthScale, imageHeightScale));
     }
 
 
@@ -159,18 +149,18 @@ public class FlutterD2goHandler implements MethodChannel.MethodCallHandler {
         ArrayList<Double> stdDouble = call.argument("std");
         double minScore = call.argument("minScore");
 
+        BitmapUtils bitmapUtils = new BitmapUtils(context);
+
         // Create a bitmap object from the imageMap and add fit the size to the model and orientation by 90 degrees
-        Bitmap resizedBitmap = getBitmap(createImageMap(call), inputWidth, inputHeight);
+        Bitmap resizedBitmap = bitmapUtils.getBitmap(createImageMap(call), inputWidth, inputHeight);
 
         // Get the increase / decrease ratio between the bitmap and the original imageMap
         // the camera streaming imageMap is tilted 90 degrees, so the vertical and horizontal directions are reversed
         float imageWidthScale = height / inputWidth;
         float imageHeightScale = width / inputHeight;
 
-        // Get formatted inference results
-        List<Map<String, Object>> outputs = createOutputsFromPredictions(resizedBitmap, meanDouble, stdDouble, minScore, imageWidthScale, imageHeightScale);
-
-        result.success(outputs);
+        // Get formatted inference results and register in result.success
+        result.success(createOutputsFromPredictions(resizedBitmap, meanDouble, stdDouble, minScore, imageWidthScale, imageHeightScale));
     }
 
     /**
@@ -206,93 +196,6 @@ public class FlutterD2goHandler implements MethodChannel.MethodCallHandler {
 
         return imageMap;
     }
-
-
-    /**
-     * <p>Convert to Bitmap for inferring from imageMap</>
-     *
-     * @param imageMap Map of camera streaming images and metadata.
-     * @param inputWidth Width size for inference image resizing.
-     * @param inputHeight Height size for inference image resizing.
-     * @return Bitmap for inference converted from imagemap
-     */
-    private Bitmap getBitmap(HashMap imageMap, int inputWidth, int inputHeight){
-        Bitmap bitmap = Bitmap.createScaledBitmap(yuv420toBitMap(imageMap), inputWidth, inputHeight, true);
-        Matrix matrix = new Matrix();
-        matrix.postRotate((int) imageMap.get("rotation"));
-        return Bitmap.createBitmap(bitmap, 0, 0, inputWidth, inputHeight, matrix, true);
-    }
-
-
-    /**
-     * <p>Convert imageMap to YUV420 NV21 format byte[] and convert to Bitmap</>
-     *
-     * @param imageMap Map of camera streaming images and metadata.
-     * @return Bitmap converted from imageMap.
-     */
-    private Bitmap yuv420toBitMap(final HashMap imageMap) {
-        ArrayList<Map> planes = (ArrayList) imageMap.get("planes");
-        int w = (int) imageMap.get("width");
-        int h = (int )imageMap.get("height");
-        byte[] data = yuv420toNV21(w, h, planes);
-
-        RenderScript rs = RenderScript.create(context);
-
-        Bitmap bitmap = Bitmap.createBitmap(w, h,   Bitmap.Config.ARGB_8888);
-        ScriptIntrinsicYuvToRGB yuvToRgbIntrinsic = ScriptIntrinsicYuvToRGB.create(rs, Element.U8_4(rs));
-
-        Type.Builder yuvType = new Type.Builder(rs, Element.U8(rs)).setX(data.length);
-        Allocation in = Allocation.createTyped(rs, yuvType.create(), Allocation.USAGE_SCRIPT);
-        in.copyFrom(data);
-
-        Type.Builder rgbaType = new Type.Builder(rs, Element.RGBA_8888(rs)).setX(w).setY(h);
-        Allocation out = Allocation.createTyped(rs, rgbaType.create(), Allocation.USAGE_SCRIPT);
-
-        yuvToRgbIntrinsic.setInput(in);
-        yuvToRgbIntrinsic.forEach(out);
-
-        out.copyTo(bitmap);
-        return bitmap;
-    }
-
-
-    /**
-     * <p>Convert camera streaming images to YUV420 NV21 format byte[]</>
-     *
-     * @param width Width size of the image to be inferred.
-     * @param height Height size of the image to be inferred
-     * @param planes Plain data of the image to be inferred.
-     * @return YUV420 NV21 format byte [] converted from camera streaming images.
-     */
-    private byte[] yuv420toNV21(int width,int height, ArrayList<Map> planes){
-        byte[] yBytes = (byte[]) planes.get(0).get("bytes"),
-                uBytes= (byte[]) planes.get(1).get("bytes"),
-                vBytes= (byte[]) planes.get(2).get("bytes");
-        final int color_pixel_stride =(int) planes.get(1).get("bytesPerPixel");
-
-        ByteArrayOutputStream outputBytes = new ByteArrayOutputStream();
-        try {
-            outputBytes.write(yBytes);
-            outputBytes.write(vBytes);
-            outputBytes.write(uBytes);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        byte[] data = outputBytes.toByteArray();
-        final int y_size = yBytes.length;
-        final int u_size = uBytes.length;
-        final int data_offset = width * height;
-        for (int i = 0; i < y_size; i++) {
-            data[i] = (byte) (yBytes[i] & 255);
-        }
-        for (int i = 0; i < u_size / color_pixel_stride; i++) {
-            data[data_offset + 2 * i] = vBytes[i * color_pixel_stride];
-            data[data_offset + 2 * i + 1] = uBytes[i * color_pixel_stride];
-        }
-        return data;
-    }
-
 
     /**
      * <p>Infer using the D2Go model, format the result and return it</>
@@ -426,8 +329,8 @@ public class FlutterD2goHandler implements MethodChannel.MethodCallHandler {
         }
 
         // Concatenate pixels and bitmap headers
-        final byte[] bmpFileHeader = BitmapHeader.getBMPFileHeader();
-        final byte[] bmpInfoHeader = BitmapHeader.getBMPInfoHeader(rawMaskWidth, rawMaskWidth);
+        final byte[] bmpFileHeader = MaskBitmapHeader.getBMPFileHeader();
+        final byte[] bmpInfoHeader = MaskBitmapHeader.getBMPInfoHeader(rawMaskWidth, rawMaskWidth);
         byte[] maskBytes = new byte[bmpFileHeader.length + bmpInfoHeader.length + pixels.length];
 
         System.arraycopy(bmpFileHeader, 0, maskBytes, 0, bmpFileHeader.length);
