@@ -312,9 +312,9 @@ class _MyAppState extends State<MyApp> {
                           : await startCameraStream();
                       setState(
                         () {
+                          _isLiveModeOn = !_isLiveModeOn;
                           _recognitions = null;
                           _selectedImage = null;
-                          _isLiveModeOn = !_isLiveModeOn;
                         },
                       );
                     },
