@@ -90,8 +90,8 @@ void main() {
             .readAsBytesSync(),
         'width': kInputWidth,
         'height': kInputHeight,
-        'mean': kTorchvisionNormMeanRGB,
-        'std': kTorchvisionNormStdRGB,
+        'mean': kNormMean,
+        'std': kNormStd,
         'minScore': kMinScore,
       })
     ]);

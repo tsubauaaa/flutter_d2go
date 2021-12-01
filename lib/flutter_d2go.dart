@@ -6,15 +6,34 @@ import 'package:flutter/services.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 
-const kTorchvisionNormMeanRGB = [0.0, 0.0, 0.0];
-const kTorchvisionNormStdRGB = [1.0, 1.0, 1.0];
+/// Camera streaming image width size.
 const kWidth = 720;
+
+/// Camera streaming image height size.
 const kHeight = 1280;
+
+/// Width size to resize for inference.
 const kInputWidth = 320;
+
+/// Height size to resize for inference.
 const kInputHeight = 320;
+
+/// mean for normalization.
+const kNormMean = [0.0, 0.0, 0.0];
+
+/// Standard deviation for normalization.
+const kNormStd = [1.0, 1.0, 1.0];
+
+/// Threshold of the inference result
 const kMinScore = 0.5;
+
+/// Tilt according to the orientation of the image to be inferred.
 const kRotation = 0;
 
+/// Infer using d2go in flutter.
+///
+/// Inference can be done for still images and camera streaming images.
+/// This class has a static method that performs each inference process.
 class FlutterD2go {
   static const MethodChannel _channel =
       MethodChannel('tsubauaaa.com/flutter_d2go');
@@ -53,8 +72,8 @@ class FlutterD2go {
 
   /// Receive the d2go relative path [modelPath] and [labelPath] in Flutter's asset and
   /// get the path [absModelPath] and [absLabelPath] to read on the Native side.
-  /// A method that calls loadModel with invokeMethod and creates org.pytorch.Module on the Native side.
-  /// Returns success on success and Null on failure.
+  /// A method that calls loadModel with invokeMethod and creates pytorch module on the Native side.
+  /// Returns success string on success and Null on failure.
   static Future<String?> loadModel(
       {required String modelPath, required String labelPath}) async {
     String absModelPath = await _getAbsolutePath(modelPath);
@@ -67,13 +86,19 @@ class FlutterD2go {
     });
   }
 
-  /// A method that calls predictImage with invokeMethod to predict
+  /// Receive the image file [image] for inference, the image size for inference [inputWidth], [inputHeight],
+  /// the mean [mean] and standard deviation [std] for image normalization,
+  /// the threshold of the inference result [minScore], and get the inference result.
+  /// The format is List of { "rect": { "left": double, "top": double, "right": double, "bottom": double },
+  ///                         "mask": Uint8List,
+  ///                         "keypoints": [[double, double], [double, double], [double, double], [double, double], ...],
+  ///                         "confidenceInClass": double, "detectedClass": String }. "mask" and "keypoints" do not exist on some models.
   static Future<List> getImagePrediction({
     required File image,
     int inputWidth = kInputWidth,
     int inputHeight = kInputHeight,
-    List<double> mean = kTorchvisionNormMeanRGB,
-    List<double> std = kTorchvisionNormStdRGB,
+    List<double> mean = kNormMean,
+    List<double> std = kNormStd,
     double minScore = kMinScore,
   }) async {
     final List prediction = await _channel.invokeMethod(
@@ -91,6 +116,16 @@ class FlutterD2go {
     return prediction;
   }
 
+  /// Receive the camera streaming image [bytesList], [imageBytesList] for inference,
+  /// the image size for inference [inputWidth], [inputHeight],
+  /// the mean [mean] and standard deviation [std] for image normalization,
+  /// the threshold of the inference result [minScore],
+  /// the tilt according to the orientation of the image to be inferred [rotation],
+  /// and get the inference result.
+  /// The format is List of { "rect": { "left": double, "top": double, "right": double, "bottom": double },
+  ///                         "mask": Uint8List,
+  ///                         "keypoints": [[double, double], [double, double], [double, double], [double, double], ...],
+  ///                         "confidenceInClass": double, "detectedClass": String }. "mask" and "keypoints" do not exist on some models.
   static Future<List> getImageStreamPrediction({
     required List<Uint8List> imageBytesList,
     required List<int?> imageBytesPerPixel,
@@ -98,8 +133,8 @@ class FlutterD2go {
     int height = kHeight,
     int inputWidth = kInputWidth,
     int inputHeight = kInputHeight,
-    List<double> mean = kTorchvisionNormMeanRGB,
-    List<double> std = kTorchvisionNormStdRGB,
+    List<double> mean = kNormMean,
+    List<double> std = kNormStd,
     double minScore = kMinScore,
     int rotation = kRotation,
   }) async {
