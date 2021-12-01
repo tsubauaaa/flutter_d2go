@@ -64,66 +64,75 @@ class _MyAppState extends State<MyApp> {
       cameras[0],
       ResolutionPreset.high,
     );
-    await controller!.initialize().then((_) {
-      if (!mounted) {
-        return;
-      }
-      setState(() {});
-    });
-    await controller!.startImageStream((CameraImage cameraImage) async {
-      if (_isDetecting) return;
-
-      _isDetecting = true;
-
-      await FlutterD2go.getImageStreamPrediction(
-        imageBytesList: cameraImage.planes.map((plane) => plane.bytes).toList(),
-        imageBytesPerPixel:
-            cameraImage.planes.map((plane) => plane.bytesPerPixel).toList(),
-        width: cameraImage.width,
-        height: cameraImage.height,
-        minScore: 0.5,
-        rotation: 90,
-      ).then((predictions) {
-        List<RecognitionModel>? recognitions;
-        if (predictions.isNotEmpty) {
-          recognitions = predictions.map(
-            (e) {
-              return RecognitionModel(
-                  Rectangle(
-                    e['rect']['left'],
-                    e['rect']['top'],
-                    e['rect']['right'],
-                    e['rect']['bottom'],
-                  ),
-                  e['mask'],
-                  e['keypoints'] != null
-                      ? (e['keypoints'] as List)
-                          .map((k) => Keypoint(k[0], k[1]))
-                          .toList()
-                      : null,
-                  e['confidenceInClass'],
-                  e['detectedClass']);
-            },
-          ).toList();
+    await controller!.initialize().then(
+      (_) {
+        if (!mounted) {
+          return;
         }
-        setState(() {
-          // With android, the inference result of the camera streaming image is tilted 90 degrees,
-          // so the vertical and horizontal directions are reversed.
-          _imageWidth = cameraImage.height;
-          _imageHeight = cameraImage.width;
-          _recognitions = recognitions;
-        });
-      }).whenComplete(
-        () => Future.delayed(
-          const Duration(
-            milliseconds: 100,
-          ),
-          () {
-            setState(() => _isDetecting = false);
+        setState(() {});
+      },
+    );
+    await controller!.startImageStream(
+      (CameraImage cameraImage) async {
+        if (_isDetecting) return;
+
+        _isDetecting = true;
+
+        await FlutterD2go.getImageStreamPrediction(
+          imageBytesList:
+              cameraImage.planes.map((plane) => plane.bytes).toList(),
+          imageBytesPerPixel:
+              cameraImage.planes.map((plane) => plane.bytesPerPixel).toList(),
+          width: cameraImage.width,
+          height: cameraImage.height,
+          minScore: 0.5,
+          rotation: 90,
+        ).then(
+          (predictions) {
+            List<RecognitionModel>? recognitions;
+            if (predictions.isNotEmpty) {
+              recognitions = predictions.map(
+                (e) {
+                  return RecognitionModel(
+                      Rectangle(
+                        e['rect']['left'],
+                        e['rect']['top'],
+                        e['rect']['right'],
+                        e['rect']['bottom'],
+                      ),
+                      e['mask'],
+                      e['keypoints'] != null
+                          ? (e['keypoints'] as List)
+                              .map((k) => Keypoint(k[0], k[1]))
+                              .toList()
+                          : null,
+                      e['confidenceInClass'],
+                      e['detectedClass']);
+                },
+              ).toList();
+            }
+            setState(
+              () {
+                // With android, the inference result of the camera streaming image is tilted 90 degrees,
+                // so the vertical and horizontal directions are reversed.
+                _imageWidth = cameraImage.height;
+                _imageHeight = cameraImage.width;
+                _recognitions = recognitions;
+              },
+            );
           },
-        ),
-      );
-    });
+        ).whenComplete(
+          () => Future.delayed(
+            const Duration(
+              milliseconds: 100,
+            ),
+            () {
+              setState(() => _isDetecting = false);
+            },
+          ),
+        );
+      },
+    );
   }
 
   Future loadModel() async {
@@ -171,11 +180,13 @@ class _MyAppState extends State<MyApp> {
       ).toList();
     }
 
-    setState(() {
-      _imageWidth = decodedImage.width;
-      _imageHeight = decodedImage.height;
-      _recognitions = recognitions;
-    });
+    setState(
+      () {
+        _imageWidth = decodedImage.width;
+        _imageHeight = decodedImage.height;
+        _recognitions = recognitions;
+      },
+    );
   }
 
   Future<File> getImageFileFromAssets(String path) async {
@@ -285,24 +296,28 @@ class _MyAppState extends State<MyApp> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 MyButton(
-                    onPressed: () => setState(() {
-                          _recognitions = null;
-                          if (_selectedImage == null) {
-                            _index != 2 ? _index += 1 : _index = 0;
-                          } else {
-                            _selectedImage = null;
-                          }
-                        }),
+                    onPressed: () => setState(
+                          () {
+                            _recognitions = null;
+                            if (_selectedImage == null) {
+                              _index != 2 ? _index += 1 : _index = 0;
+                            } else {
+                              _selectedImage = null;
+                            }
+                          },
+                        ),
                     text: 'Test Image\n${_index + 1}/${_imageList.length}'),
                 MyButton(
                     onPressed: () async {
                       final XFile? pickedFile =
                           await _picker.pickImage(source: ImageSource.gallery);
                       if (pickedFile == null) return;
-                      setState(() {
-                        _recognitions = null;
-                        _selectedImage = File(pickedFile.path);
-                      });
+                      setState(
+                        () {
+                          _recognitions = null;
+                          _selectedImage = File(pickedFile.path);
+                        },
+                      );
                     },
                     text: 'Select'),
                 MyButton(
@@ -482,12 +497,7 @@ class RecognitionModel {
 }
 
 class Rectangle {
-  Rectangle(
-    this.left,
-    this.top,
-    this.right,
-    this.bottom,
-  );
+  Rectangle(this.left, this.top, this.right, this.bottom);
   double left;
   double top;
   double right;
@@ -495,10 +505,7 @@ class Rectangle {
 }
 
 class Keypoint {
-  Keypoint(
-    this.x,
-    this.y,
-  );
+  Keypoint(this.x, this.y);
   double x;
   double y;
 }
