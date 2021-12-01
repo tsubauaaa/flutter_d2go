@@ -25,7 +25,7 @@ import io.flutter.plugin.common.MethodCall;
  *
  * Utility class to convert bitmaps from camera streaming images and metadata.
  */
-public class BitmapUtils {
+public class StreamImageUtils {
 
     private static Context context;
     private static HashMap imageMap;
@@ -42,7 +42,7 @@ public class BitmapUtils {
      *           `height` Height size (int) of the image to be inferred.
      *           `rotation` Tilt (int) according to the orientation of the image to be inferred.
      */
-    public BitmapUtils(@NonNull MethodCall call, @NonNull Context context) {
+    public StreamImageUtils(@NonNull MethodCall call, @NonNull Context context) {
         this.context = context;
         ArrayList<byte[]> imageBytesList = call.argument("imageBytesList");
         ArrayList<Integer> imageBytesPerPixel = call.argument("imageBytesPerPixel");
