@@ -81,7 +81,7 @@ class _MyAppState extends State<MyApp> {
             cameraImage.planes.map((plane) => plane.bytesPerPixel).toList(),
         width: cameraImage.width,
         height: cameraImage.height,
-        minScore: 0.8,
+        minScore: 0.5,
         rotation: 90,
       ).then((predictions) {
         List<RecognitionModel>? recognitions;

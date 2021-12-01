@@ -81,11 +81,11 @@ public class FlutterD2goHandler implements MethodChannel.MethodCallHandler {
     /**
      * <p>Load the d2go model and get org.pytorch.Module in [module]. Read the classes file and add classes to [classes]</>
      *
-     * @param call absModelPath The path of the D2Go model loaded by the load of org.pytorch.Module
-     *             assetModelPath Flutter asset path of D2Go model used to display log when model or classes loading fails
-     *             absLabelPath The path of the file where the class is written
-     *             assetLabelPath Flutter asset path of classes file used to display log when model or classes loading fails
-     * @param result If successful, return the string "success" in result.success
+     * @param call absModelPath The path of the D2Go model loaded by the load of org.pytorch.Module.
+     *             assetModelPath Flutter asset path of D2Go model used to display log when model or classes loading fails.
+     *             absLabelPath The path of the file where the class is written.
+     *             assetLabelPath Flutter asset path of classes file used to display log when model or classes loading fails.
+     * @param result If successful, return the string "success" in result.success.
      */
     private void loadModel(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
         try {
@@ -113,7 +113,7 @@ public class FlutterD2goHandler implements MethodChannel.MethodCallHandler {
      * <p>Create an input image from static image for inference and return the inference result to Flutter</>
      *
      * @param call Method call called from Flutter. Contains various arguments.
-     * @param result If successful, return a formatted the inference result with result.success
+     * @param result If successful, return a formatted the inference result with result.success.
      */
     private void predictImage(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
 
@@ -143,13 +143,49 @@ public class FlutterD2goHandler implements MethodChannel.MethodCallHandler {
      * <p>Create an input image from camera streaming image for inference and return the inference result to Flutter</>
      *
      * @param call Method call called from Flutter. Contains various arguments.
-     * @param result If successful, return a formatted the inference result with result.success
+     * @param result If successful, return a formatted the inference result with result.success.
      */
     private void predictImageStream(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
+        int width = call.argument("width");
+        int height = call.argument("height");
+        int inputWidth = call.argument("inputWidth");
+        int inputHeight = call.argument("inputHeight");
+        ArrayList<Double> meanDouble = call.argument("mean");
+        ArrayList<Double> stdDouble = call.argument("std");
+        double minScore = call.argument("minScore");
+
+        // Create a bitmap object from the imageMap and add fit the size to the model and orientation by 90 degrees
+        Bitmap resizedBitmap = getBitmap(createImageMap(call), inputWidth, inputHeight);
+
+        // Get the increase / decrease ratio between the bitmap and the original imageMap
+        // the camera streaming imageMap is tilted 90 degrees, so the vertical and horizontal directions are reversed
+        float imageWidthScale = height / inputWidth;
+        float imageHeightScale = width / inputHeight;
+
+        // Get formatted inference results
+        List<Map<String, Object>> outputs = createOutputsFromPredictions(resizedBitmap, meanDouble, stdDouble, minScore, imageWidthScale, imageHeightScale);
+
+        result.success(outputs);
+    }
+
+    /**
+     * <p>Create camera streaming images and metadata for Bitmap image creation for inference</>
+     *
+     * @param call Method call called from Flutter. Contains various arguments.
+     * @return Map of camera streaming images and metadata.
+     *         The elements are
+     *                      `planes` Map containing bytes (byte []) and bytesPerPixel (Integer).
+     *                      `width` Width size (int) of the image to be inferred.
+     *                      `height` Height size (int) of the image to be inferred.
+     *                      `rotation` Tilt (int) according to the orientation of the image to be inferred.
+     */
+    private HashMap createImageMap(@NonNull MethodCall call){
         ArrayList<byte[]> imageBytesList = call.argument("imageBytesList");
         ArrayList<Integer> imageBytesPerPixel = call.argument("imageBytesPerPixel");
-
-        HashMap image = new HashMap<>();
+        int width = call.argument("width");
+        int height = call.argument("height");
+        int rotation = call.argument("rotation");
+        HashMap imageMap = new HashMap<>();
         ArrayList planes = new ArrayList<Map<String, Object>>(Arrays.asList(new LinkedHashMap<>(), new LinkedHashMap<>(), new LinkedHashMap<>()));
         for (int i = 0; i < planes.size(); i++) {
             Map<String, Object> value = new LinkedHashMap<>();
@@ -157,44 +193,42 @@ public class FlutterD2goHandler implements MethodChannel.MethodCallHandler {
             value.put("bytesPerPixel", imageBytesPerPixel.get(i));
             planes.set(i, value);
         }
-        image.put("planes", planes);
 
+        imageMap.put("planes", planes);
+        imageMap.put("width", width);
+        imageMap.put("height", height);
+        imageMap.put("rotation", rotation);
 
-        ArrayList<Double> meanDouble = call.argument("mean");
-        ArrayList<Double> stdDouble = call.argument("std");
-        double minScore = call.argument("minScore");
-        int width = call.argument("width");
-        int height = call.argument("height");
-        int inputWidth = call.argument("inputWidth");
-        int inputHeight = call.argument("inputHeight");
-        int rotation = call.argument("rotation");
-
-        // Create a bitmap object from the image and add orientation by 90 degrees
-        Bitmap orientedBitmap = getBitmap(image, width, height, inputWidth, inputHeight, rotation);
-
-        // Get the increase / decrease ratio between the bitmap and the original image
-        // the camera streaming image is tilted 90 degrees, so the vertical and horizontal directions are reversed
-        float imageWidthScale = (float) height / inputWidth;
-        float imageHeightScale = (float) width / inputHeight;
-
-        // Get formatted inference results
-        List<Map<String, Object>> outputs = createOutputsFromPredictions(orientedBitmap, meanDouble, stdDouble, minScore, imageWidthScale, imageHeightScale);
-
-        result.success(outputs);
+        return imageMap;
     }
 
 
-    public Bitmap getBitmap(HashMap image, int width, int height, int inputWidth, int inputHeight, int rotation){
-        Bitmap bitmap = Bitmap.createScaledBitmap(yuv420toBitMap(image, width, height), inputWidth, inputHeight, true);
+    /**
+     * <p>Convert to Bitmap for inferring from imageMap</>
+     *
+     * @param imageMap Map of camera streaming images and metadata.
+     * @param inputWidth Width size for inference image resizing.
+     * @param inputHeight Height size for inference image resizing.
+     * @return Bitmap for inference converted from imagemap
+     */
+    private Bitmap getBitmap(HashMap imageMap, int inputWidth, int inputHeight){
+        Bitmap bitmap = Bitmap.createScaledBitmap(yuv420toBitMap(imageMap), inputWidth, inputHeight, true);
         Matrix matrix = new Matrix();
-        matrix.postRotate(rotation);
+        matrix.postRotate((int) imageMap.get("rotation"));
         return Bitmap.createBitmap(bitmap, 0, 0, inputWidth, inputHeight, matrix, true);
     }
 
 
-    public Bitmap yuv420toBitMap(final HashMap image, int w, int h) {
-        ArrayList<Map> planes = (ArrayList) image.get("planes");
-
+    /**
+     * <p></>
+     *
+     * @param imageMap Map of camera streaming images and metadata.
+     * @return
+     */
+    private Bitmap yuv420toBitMap(final HashMap imageMap) {
+        ArrayList<Map> planes = (ArrayList) imageMap.get("planes");
+        int w = (int) imageMap.get("width");
+        int h = (int )imageMap.get("height");
         byte[] data = yuv420toNV21(w, h, planes);
 
         RenderScript rs = RenderScript.create(context);
@@ -217,22 +251,30 @@ public class FlutterD2goHandler implements MethodChannel.MethodCallHandler {
     }
 
 
-    public byte[] yuv420toNV21(int width,int height, ArrayList<Map> planes){
+    /**
+     * <p></>
+     *
+     * @param width Width size of the image to be inferred.
+     * @param height Height size of the image to be inferred
+     * @param planes Plain data of the image to be inferred.
+     * @return
+     */
+    private byte[] yuv420toNV21(int width,int height, ArrayList<Map> planes){
         byte[] yBytes = (byte[]) planes.get(0).get("bytes"),
                 uBytes= (byte[]) planes.get(1).get("bytes"),
                 vBytes= (byte[]) planes.get(2).get("bytes");
         final int color_pixel_stride =(int) planes.get(1).get("bytesPerPixel");
 
-        ByteArrayOutputStream outputbytes = new ByteArrayOutputStream();
+        ByteArrayOutputStream outputBytes = new ByteArrayOutputStream();
         try {
-            outputbytes.write(yBytes);
-            outputbytes.write(vBytes);
-            outputbytes.write(uBytes);
+            outputBytes.write(yBytes);
+            outputBytes.write(vBytes);
+            outputBytes.write(uBytes);
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        byte[] data = outputbytes.toByteArray();
+        byte[] data = outputBytes.toByteArray();
         final int y_size = yBytes.length;
         final int u_size = uBytes.length;
         final int data_offset = width * height;
