@@ -78,7 +78,7 @@ class _MyAppState extends State<MyApp> {
 
         _isDetecting = true;
 
-        await FlutterD2go.getImageStreamPrediction(
+        await FlutterD2go.getStreamImagePrediction(
           imageBytesList:
               cameraImage.planes.map((plane) => plane.bytes).toList(),
           imageBytesPerPixel:

@@ -64,8 +64,8 @@ public class FlutterD2goHandler implements MethodChannel.MethodCallHandler {
             case "predictImage":
                 predictImage(call, result);
                 break;
-            case "predictImageStream":
-                predictImageStream(call, result);
+            case "predictStreamImage":
+                predictStreamImage(call, result);
                 break;
             default:
                 result.notImplemented();
@@ -139,7 +139,7 @@ public class FlutterD2goHandler implements MethodChannel.MethodCallHandler {
      * @param call Method call called from Flutter. Contains various arguments.
      * @param result If successful, return a formatted the inference result with result.success.
      */
-    private void predictImageStream(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
+    private void predictStreamImage(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
         int width = call.argument("width");
         int height = call.argument("height");
         int inputWidth = call.argument("inputWidth");
@@ -148,10 +148,10 @@ public class FlutterD2goHandler implements MethodChannel.MethodCallHandler {
         ArrayList<Double> stdDouble = call.argument("std");
         double minScore = call.argument("minScore");
 
-        BitmapUtils bitmapUtils = new BitmapUtils(call, context);
+        StreamImageUtils streamImageUtils = new StreamImageUtils(call, context);
 
         // Create a bitmap object from the imageMap and add fit the size to the model and orientation by 90 degrees
-        Bitmap resizedBitmap = bitmapUtils.getBitmap(inputWidth, inputHeight);
+        Bitmap resizedBitmap = streamImageUtils.getBitmap(inputWidth, inputHeight);
 
         // Get the increase / decrease ratio between the bitmap and the original imageMap
         // the camera streaming imageMap is tilted 90 degrees, so the vertical and horizontal directions are reversed

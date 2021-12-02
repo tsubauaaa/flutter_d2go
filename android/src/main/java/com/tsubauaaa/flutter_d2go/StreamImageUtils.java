@@ -21,9 +21,9 @@ import androidx.annotation.NonNull;
 import io.flutter.plugin.common.MethodCall;
 
 /**
- * <p>BitmapUtils</>
+ * <p>StreamImageUtils</>
  *
- * Utility class to convert bitmaps from camera streaming images and metadata.
+ * Utility class to convert bitmaps from camera stream image and metadata.
  */
 public class StreamImageUtils {
 
@@ -35,7 +35,7 @@ public class StreamImageUtils {
      *
      * @param call Method call called from Flutter. Contains various arguments.
      * @param context Used in renderscript.
-     * The member variable imageMap is a map of camera streaming images and metadata.
+     * The member variable imageMap is a map of camera streaming image and metadata.
      * The elements are
      *           `planes` Map containing bytes (byte []) and bytesPerPixel (Integer).
      *           `width` Width size (int) of the image to be inferred.
@@ -67,15 +67,15 @@ public class StreamImageUtils {
     }
 
     /**
-     * <p>Convert to Bitmap for inferring from imageMap</>
+     * <p>Convert to Bitmap for inferring from camera stream image and metadata (imageMap)</>
      *
      * @param inputWidth Width size for inference image resizing.
      * @param inputHeight Height size for inference image resizing.
-     * @return Bitmap for inference converted from imagemap
+     * @return Bitmap for inference converted from camera stream image and metadata (imageMap)
      */
     public static Bitmap getBitmap(int inputWidth, int inputHeight){
         // Resize bitmap for inference
-        Bitmap bitmap = Bitmap.createScaledBitmap(yuv420toBitMap(), inputWidth, inputHeight, true);
+        Bitmap bitmap = Bitmap.createScaledBitmap(streamImageToBitmap(), inputWidth, inputHeight, true);
 
         // Tilt the bitmap 90 degrees, taking into account the impact of orientation
         Matrix matrix = new Matrix();
@@ -85,26 +85,27 @@ public class StreamImageUtils {
 
 
     /**
-     * <p>Convert imageMap to YUV420 NV21 format byte[] and convert to Bitmap</>
+     * <p>Convert stream image and metadata (imageMap) to byte[] in YUV420 NV21 format and then convert to Bitmap</>
      *
-     * @return Bitmap converted from imageMap.
+     * Use RenderScript to convert YUV420 NV1 to RGBA and then to Bitmap to reduce the calculation load.
+     * @return Bitmap converted from stream image and metadata (imageMap).
      */
-    private static Bitmap yuv420toBitMap() {
-        ArrayList<Map> planes = (ArrayList) imageMap.get("planes");
-        int w = (int) imageMap.get("width");
-        int h = (int)imageMap.get("height");
-        byte[] data = yuv420toNV21(w, h, planes);
+    private static Bitmap streamImageToBitmap() {
 
         RenderScript rs = RenderScript.create(context);
 
-        Bitmap bitmap = Bitmap.createBitmap(w, h,   Bitmap.Config.ARGB_8888);
+        int width = (int) imageMap.get("width");
+        int height = (int)imageMap.get("height");
+
+        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         ScriptIntrinsicYuvToRGB yuvToRgbIntrinsic = ScriptIntrinsicYuvToRGB.create(rs, Element.U8_4(rs));
 
+        byte[] data = cameraStreamToBytes();
         Type.Builder yuvType = new Type.Builder(rs, Element.U8(rs)).setX(data.length);
         Allocation in = Allocation.createTyped(rs, yuvType.create(), Allocation.USAGE_SCRIPT);
         in.copyFrom(data);
 
-        Type.Builder rgbaType = new Type.Builder(rs, Element.RGBA_8888(rs)).setX(w).setY(h);
+        Type.Builder rgbaType = new Type.Builder(rs, Element.RGBA_8888(rs)).setX(width).setY(height);
         Allocation out = Allocation.createTyped(rs, rgbaType.create(), Allocation.USAGE_SCRIPT);
 
         yuvToRgbIntrinsic.setInput(in);
@@ -116,14 +117,21 @@ public class StreamImageUtils {
 
 
     /**
-     * <p>Convert camera streaming images to YUV420 NV21 format byte[]</>
+     * <p>Convert camera stream image and metadata (imageMap) to YUV420 NV21 format byte[]</>
      *
-     * @param width Width size of the image to be inferred.
-     * @param height Height size of the image to be inferred
-     * @param planes Plain data of the image to be inferred.
-     * @return YUV420 NV21 format byte [] converted from camera streaming images.
+     * The Android camera Stream picture format is basically yuv420 nv21, so treat it that way here as well.
+     * YUV is a color space expressed using a luminance signal Y and two color difference signals (CbCr).
+     * The byte order is divided into Y plane and CbCr plane. For NV21 format, the CbCr plane has the order of Cb bytes and Cr bytes swapped.
+     * @see <a href="https://en.wikipedia.org/wiki/YUV#Y%E2%80%B2UV420sp_(NV21)_to_RGB_conversion_(Android)">https://en.wikipedia.org/wiki/YUV#Y%E2%80%B2UV420sp_(NV21)_to_RGB_conversion_(Android)</a>
+     * @see <a href="https://visual-foxpro-programmer.com/img/isp/16/rgb-conversion-nv21-storage-format.png">https://visual-foxpro-programmer.com/img/isp/16/rgb-conversion-nv21-storage-format.png</a>
+     *
+     * @return YUV420 NV21 format byte [] converted from camera stream image and metadata (imageMap).
      */
-    private static byte[] yuv420toNV21(int width,int height, ArrayList<Map> planes){
+    private static byte[] cameraStreamToBytes(){
+        int width = (int) imageMap.get("width");
+        int height = (int)imageMap.get("height");
+
+        ArrayList<Map> planes = (ArrayList) imageMap.get("planes");
         byte[] yBytes = (byte[]) planes.get(0).get("bytes"),
                 uBytes= (byte[]) planes.get(1).get("bytes"),
                 vBytes= (byte[]) planes.get(2).get("bytes");
@@ -145,6 +153,7 @@ public class StreamImageUtils {
         for (int i = 0; i < y_size; i++) {
             data[i] = (byte) (yBytes[i] & 255);
         }
+        // swap
         for (int i = 0; i < u_size / color_pixel_stride; i++) {
             data[data_offset + 2 * i] = vBytes[i * color_pixel_stride];
             data[data_offset + 2 * i + 1] = uBytes[i * color_pixel_stride];

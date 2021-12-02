@@ -126,7 +126,7 @@ class FlutterD2go {
   ///                         "mask": Uint8List,
   ///                         "keypoints": [[double, double], [double, double], [double, double], [double, double], ...],
   ///                         "confidenceInClass": double, "detectedClass": String }. "mask" and "keypoints" do not exist on some models.
-  static Future<List> getImageStreamPrediction({
+  static Future<List> getStreamImagePrediction({
     required List<Uint8List> imageBytesList,
     required List<int?> imageBytesPerPixel,
     int width = kWidth,
@@ -139,7 +139,7 @@ class FlutterD2go {
     int rotation = kRotation,
   }) async {
     final List prediction = await _channel.invokeMethod(
-      'predictImageStream',
+      'predictStreamImage',
       {
         'imageBytesList': imageBytesList,
         'imageBytesPerPixel': imageBytesPerPixel,
