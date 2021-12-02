@@ -9,6 +9,7 @@ Flutter Plugin inferring using [d2go](https://github.com/facebookresearch/d2go),
 - Providing class and boundary box by object detection (Android and iOS)
 - Providing mask data by instance segmentation (Android only)
 - Providing keypoints by keypoint estimation (Android only)
+- Providing live inference for camera stream images (Android only)
 
 ## Preview
 
@@ -19,6 +20,8 @@ Flutter Plugin inferring using [d2go](https://github.com/facebookresearch/d2go),
 - Keypoints estimation
 
   ![](images/keypoints.png)
+
+- Live inference for camera stream images
 
 ## Installation
 
@@ -46,20 +49,39 @@ await FlutterD2go.loadModel(
 );
 ```
 
-### 2. Get predictions
+### 2. Get static image predictions
 
 ```dart
 List<Map<String, dynamic>> predictions = await FlutterD2go.getImagePrediction(
     image: image,           // required File(dart:io) image
-    width: 320,             // defaults to 640
-    height: 320,            // defaults to 640
+    width: 320,             // defaults to 320
+    height: 320,            // defaults to 320
     mean: [0.0, 0.0, 0.0],  // defaults to [0.0, 0.0, 0.0]
     std: [1.0, 1.0, 1.0],   // defaults to [1.0, 1.0, 1.0]
     minScore: 0.7,          // defaults to 0.5
 );
 ```
 
-#### Output format
+### 3. Get stream images predictions
+
+```dart
+List<Map<String, dynamic>> predictions = await FlutterD2go.getStreamImagePrediction(
+    imageBytesList: cameraImage.planes.map((plane) => plane.bytes).toList(),
+                                                                // required List<Uint8List> image byte array
+    imageBytesPerPixel: cameraImage.planes.map((plane) => plane.bytesPerPixel).toList(),
+                                                                // default to [1, 2, 2]
+    kWidth: cameraImage.width,                                  // default to 720
+    kHeight: cameraImage.height,                                // default to 1280
+    kInputWidth: 320,                                           // defaults to 320
+    kInputHeight: 320,                                          // defaults to 320
+    mean: [0.0, 0.0, 0.0],                                      // defaults to [0.0, 0.0, 0.0]
+    std: [1.0, 1.0, 1.0],                                       // defaults to [1.0, 1.0, 1.0]
+    minScore: 0.7,                                              // default to 0.5
+    rotation: 90,                                               // default to 0
+);
+```
+
+### Output format
 
 `rect` is the scale of the original image.  
 `mask` and `keypoints` depend on whether the d2go model has mask and keypoints.
