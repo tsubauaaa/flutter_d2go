@@ -1,3 +1,7 @@
+## 0.4.8
+
+- Implemented stream image inference function.
+
 ## 0.3.0
 
 - Implemented keypoint estimation function.
