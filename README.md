@@ -54,7 +54,7 @@ await FlutterD2go.loadModel(
 ### 2. Get static image predictions
 
 ```dart
-List<Map<String, dynamic>> predictions = await FlutterD2go.getImagePrediction(
+List<Map<String, dynamic>> output = await FlutterD2go.getImagePrediction(
     image: image,           // required File(dart:io) image
     width: 320,             // defaults to 320
     height: 320,            // defaults to 320
@@ -67,28 +67,26 @@ List<Map<String, dynamic>> predictions = await FlutterD2go.getImagePrediction(
 ### 3. Get stream images predictions
 
 ```dart
-List<Map<String, dynamic>> predictions = await FlutterD2go.getStreamImagePrediction(
-    imageBytesList: cameraImage.planes.map((plane) => plane.bytes).toList(),
-                                                                // required List<Uint8List> image byte array
-    imageBytesPerPixel: cameraImage.planes.map((plane) => plane.bytesPerPixel).toList(),
-                                                                // default to [1, 2, 2]
-    kWidth: cameraImage.width,                                  // default to 720
-    kHeight: cameraImage.height,                                // default to 1280
-    kInputWidth: 320,                                           // defaults to 320
-    kInputHeight: 320,                                          // defaults to 320
-    mean: [0.0, 0.0, 0.0],                                      // defaults to [0.0, 0.0, 0.0]
-    std: [1.0, 1.0, 1.0],                                       // defaults to [1.0, 1.0, 1.0]
-    minScore: 0.7,                                              // default to 0.5
-    rotation: 90,                                               // default to 0
+List<Map<String, dynamic>> output = await FlutterD2go.getStreamImagePrediction(
+    imageBytesList: cameraImage.planes.map((plane) => plane.bytes).toList(),             // required List<Uint8List> image byte array
+    imageBytesPerPixel: cameraImage.planes.map((plane) => plane.bytesPerPixel).toList(), // default to [1, 2, 2]
+    kWidth: cameraImage.width,              // default to 720
+    kHeight: cameraImage.height,            // default to 1280
+    kInputWidth: 320,                       // defaults to 320
+    kInputHeight: 320,                      // defaults to 320
+    mean: [0.0, 0.0, 0.0],                  // defaults to [0.0, 0.0, 0.0]
+    std: [1.0, 1.0, 1.0],                   // defaults to [1.0, 1.0, 1.0]
+    minScore: 0.7,                          // default to 0.5
+    rotation: 90,                           // default to 0
 );
 ```
 
-### Output format
+### Predictions `output` format
 
 `rect` is the scale of the original image.  
 `mask` and `keypoints` depend on whether the d2go model has mask and keypoints.
 
-`mask` will be a Uint8List of bitmap images.  
+`mask` will be a Uint8List of bitmap images bytes.
 `keypoints` will be a list of 17 (x, y).
 
 ```dart
