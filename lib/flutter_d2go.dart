@@ -89,7 +89,7 @@ class FlutterD2go {
     });
   }
 
-  /// Receive the image file [image] for inference, the image size for inference [inputWidth], [inputHeight],
+  /// Using the image file [image] (required) for inference, the image size for inference [inputWidth], [inputHeight],
   /// the mean [mean] and standard deviation [std] for image normalization,
   /// the threshold of the inference result [minScore], and get the inference result.
   /// The format is List of { "rect": { "left": double, "top": double, "right": double, "bottom": double },
@@ -119,7 +119,8 @@ class FlutterD2go {
     return prediction;
   }
 
-  /// Receive the camera stream image [bytesList], [imageBytesList] for inference,
+  /// Using the camera stream image [imageBytesList] (required), [imageBytesPerPixel] for inference,
+  /// the stream image size [width], [height],
   /// the image size for inference [inputWidth], [inputHeight],
   /// the mean [mean] and standard deviation [std] for image normalization,
   /// the threshold of the inference result [minScore],
