@@ -22,6 +22,7 @@ Flutter Plugin inferring using [d2go](https://github.com/facebookresearch/d2go),
   ![](images/keypoints.png)
 
 - Live inference for camera stream images
+
   ![](images/live.gif)
 
 ## Installation
