@@ -6,29 +6,32 @@ import 'package:flutter/services.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 
+/// A list of Y-byte, Cb-byte, and Cr-byte pixel strides.
+const List<int> kBytesPerPixel = [1, 2, 2];
+
 /// Camera stream image width size.
-const kWidth = 720;
+const int kWidth = 720;
 
 /// Camera stream image height size.
-const kHeight = 1280;
+const int kHeight = 1280;
 
 /// Width size to resize for inference.
-const kInputWidth = 320;
+const int kInputWidth = 320;
 
 /// Height size to resize for inference.
-const kInputHeight = 320;
+const int kInputHeight = 320;
 
 /// mean for normalization.
-const kNormMean = [0.0, 0.0, 0.0];
+const List<double> kNormMean = [0.0, 0.0, 0.0];
 
 /// Standard deviation for normalization.
-const kNormStd = [1.0, 1.0, 1.0];
+const List<double> kNormStd = [1.0, 1.0, 1.0];
 
 /// Threshold of the inference result
-const kMinScore = 0.5;
+const double kMinScore = 0.5;
 
 /// Tilt according to the orientation of the image to be inferred.
-const kRotation = 0;
+const int kRotation = 0;
 
 /// Infer using d2go in flutter.
 ///
@@ -128,7 +131,7 @@ class FlutterD2go {
   ///                         "confidenceInClass": double, "detectedClass": String }. "mask" and "keypoints" do not exist on some models.
   static Future<List> getStreamImagePrediction({
     required List<Uint8List> imageBytesList,
-    required List<int?> imageBytesPerPixel,
+    List<int?> imageBytesPerPixel = kBytesPerPixel,
     int width = kWidth,
     int height = kHeight,
     int inputWidth = kInputWidth,

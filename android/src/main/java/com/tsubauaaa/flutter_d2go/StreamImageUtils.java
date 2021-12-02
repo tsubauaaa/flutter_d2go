@@ -37,7 +37,7 @@ public class StreamImageUtils {
      * @param context Used in renderscript.
      * The member variable imageMap is a map of camera streaming image and metadata.
      * The elements are
-     *           `planes` Map containing bytes (byte []) and bytesPerPixel (Integer).
+     *           `planes` Map containing bytes (byte[]) and bytesPerPixel (ArrayList<Integer>).
      *           `width` Width size (int) of the image to be inferred.
      *           `height` Height size (int) of the image to be inferred.
      *           `rotation` Tilt (int) according to the orientation of the image to be inferred.

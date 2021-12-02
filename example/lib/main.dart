@@ -81,8 +81,6 @@ class _MyAppState extends State<MyApp> {
         await FlutterD2go.getStreamImagePrediction(
           imageBytesList:
               cameraImage.planes.map((plane) => plane.bytes).toList(),
-          imageBytesPerPixel:
-              cameraImage.planes.map((plane) => plane.bytesPerPixel).toList(),
           width: cameraImage.width,
           height: cameraImage.height,
           minScore: 0.5,
