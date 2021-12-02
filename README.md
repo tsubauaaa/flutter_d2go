@@ -6,10 +6,10 @@ Flutter Plugin inferring using [d2go](https://github.com/facebookresearch/d2go),
 
 ## Features
 
-- Providing class and boundary box by object detection (Android and iOS)
-- Providing mask data by instance segmentation (Android only)
-- Providing keypoints by keypoint estimation (Android only)
-- Providing live inference for camera stream images (Android only)
+- Class and boundary box by object detection (Android and iOS)
+- Mask data by instance segmentation (Android only)
+- Keypoints by keypoint estimation (Android only)
+- Live inference for camera stream images (Android only)
 
 ## Preview
 
@@ -22,6 +22,7 @@ Flutter Plugin inferring using [d2go](https://github.com/facebookresearch/d2go),
   ![](images/keypoints.png)
 
 - Live inference for camera stream images
+  ![](images/live.gif)
 
 ## Installation
 
