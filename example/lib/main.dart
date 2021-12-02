@@ -59,7 +59,7 @@ class _MyAppState extends State<MyApp> {
     super.dispose();
   }
 
-  Future<void> startCameraStream() async {
+  Future<void> live() async {
     controller = CameraController(
       cameras[0],
       ResolutionPreset.high,
@@ -289,7 +289,7 @@ class _MyAppState extends State<MyApp> {
             text: 'Detect',
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 48.0),
+            padding: const EdgeInsets.symmetric(vertical: 48),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
@@ -322,7 +322,7 @@ class _MyAppState extends State<MyApp> {
                     onPressed: () async {
                       _isLiveModeOn
                           ? await controller!.stopImageStream()
-                          : await startCameraStream();
+                          : await live();
                       setState(
                         () {
                           _isLiveModeOn = !_isLiveModeOn;
