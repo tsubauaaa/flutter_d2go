@@ -6,10 +6,10 @@ import 'package:flutter/services.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 
-/// Camera streaming image width size.
+/// Camera stream image width size.
 const kWidth = 720;
 
-/// Camera streaming image height size.
+/// Camera stream image height size.
 const kHeight = 1280;
 
 /// Width size to resize for inference.
@@ -32,7 +32,7 @@ const kRotation = 0;
 
 /// Infer using d2go in flutter.
 ///
-/// Inference can be done for still images and camera streaming images.
+/// Inference can be done for still images and camera stream images.
 /// This class has a static method that performs each inference process.
 class FlutterD2go {
   static const MethodChannel _channel =
@@ -116,7 +116,7 @@ class FlutterD2go {
     return prediction;
   }
 
-  /// Receive the camera streaming image [bytesList], [imageBytesList] for inference,
+  /// Receive the camera stream image [bytesList], [imageBytesList] for inference,
   /// the image size for inference [inputWidth], [inputHeight],
   /// the mean [mean] and standard deviation [std] for image normalization,
   /// the threshold of the inference result [minScore],

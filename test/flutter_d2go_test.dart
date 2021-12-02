@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_d2go/flutter_d2go.dart';
@@ -28,7 +29,7 @@ void main() {
       log.add(methodCall);
       if (methodCall.method == 'loadModel') {
         return "success";
-      } else {
+      } else if (methodCall.method == 'predictImage') {
         return [
           {
             'rect': {
@@ -39,7 +40,19 @@ void main() {
             },
             'confidenceInClass': 0.985002338886261,
             'detectedClass': "bicycle",
-            'mask': [0, 255, 255, 0],
+          },
+        ];
+      } else {
+        return [
+          {
+            'rect': {
+              'left': 36.4365234375,
+              'top': 413.9417419433594,
+              'right': 442.3828125,
+              'bottom': 565.4701538085938
+            },
+            'confidenceInClass': 0.938831627368927,
+            'detectedClass': 'keyboard'
           },
         ];
       }
@@ -81,18 +94,54 @@ void main() {
         },
         'confidenceInClass': 0.985002338886261,
         'detectedClass': "bicycle",
-        'mask': [0, 255, 255, 0],
       },
     ]);
     expect(log, <Matcher>[
       isMethodCall('predictImage', arguments: <String, dynamic>{
         'image': File('${current.path}/example/assets/images/test1.png')
             .readAsBytesSync(),
-        'width': kInputWidth,
-        'height': kInputHeight,
+        'inputWidth': kInputWidth,
+        'inputHeight': kInputHeight,
         'mean': kNormMean,
         'std': kNormStd,
         'minScore': kMinScore,
+      })
+    ]);
+  });
+
+  test('getStreamImagePrediction', () async {
+    final res = await FlutterD2go.getStreamImagePrediction(
+      imageBytesList: [
+        Uint8List.fromList([0, 1, 2])
+      ],
+      imageBytesPerPixel: [1, 2, 2],
+    );
+    expect(res, [
+      {
+        'rect': {
+          'left': 36.4365234375,
+          'top': 413.9417419433594,
+          'right': 442.3828125,
+          'bottom': 565.4701538085938
+        },
+        'confidenceInClass': 0.938831627368927,
+        'detectedClass': 'keyboard'
+      },
+    ]);
+    expect(log, <Matcher>[
+      isMethodCall('predictStreamImage', arguments: <String, dynamic>{
+        'imageBytesList': [
+          Uint8List.fromList([0, 1, 2])
+        ],
+        'imageBytesPerPixel': [1, 2, 2],
+        'width': kWidth,
+        'height': kHeight,
+        'inputWidth': kInputWidth,
+        'inputHeight': kInputHeight,
+        'mean': kNormMean,
+        'std': kNormStd,
+        'minScore': kMinScore,
+        'rotation': kRotation,
       })
     ]);
   });
