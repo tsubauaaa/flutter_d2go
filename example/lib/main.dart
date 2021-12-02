@@ -3,13 +3,22 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui';
 
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_d2go/flutter_d2go.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 
-void main() {
+List<CameraDescription> cameras = [];
+
+Future<void> main() async {
+  try {
+    WidgetsFlutterBinding.ensureInitialized();
+    cameras = await availableCameras();
+  } on CameraException catch (e) {
+    debugPrint('Error: ${e.code}, Message: ${e.description}');
+  }
   runApp(
     const MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -34,10 +43,94 @@ class _MyAppState extends State<MyApp> {
   int? _imageHeight;
   final ImagePicker _picker = ImagePicker();
 
+  CameraController? controller;
+  bool _isDetecting = false;
+  bool _isLiveModeOn = false;
+
   @override
   void initState() {
     super.initState();
     loadModel();
+  }
+
+  @override
+  void dispose() {
+    controller?.dispose();
+    super.dispose();
+  }
+
+  Future<void> live() async {
+    controller = CameraController(
+      cameras[0],
+      ResolutionPreset.high,
+    );
+    await controller!.initialize().then(
+      (_) {
+        if (!mounted) {
+          return;
+        }
+        setState(() {});
+      },
+    );
+    await controller!.startImageStream(
+      (CameraImage cameraImage) async {
+        if (_isDetecting) return;
+
+        _isDetecting = true;
+
+        await FlutterD2go.getStreamImagePrediction(
+          imageBytesList:
+              cameraImage.planes.map((plane) => plane.bytes).toList(),
+          width: cameraImage.width,
+          height: cameraImage.height,
+          minScore: 0.5,
+          rotation: 90,
+        ).then(
+          (predictions) {
+            List<RecognitionModel>? recognitions;
+            if (predictions.isNotEmpty) {
+              recognitions = predictions.map(
+                (e) {
+                  return RecognitionModel(
+                      Rectangle(
+                        e['rect']['left'],
+                        e['rect']['top'],
+                        e['rect']['right'],
+                        e['rect']['bottom'],
+                      ),
+                      e['mask'],
+                      e['keypoints'] != null
+                          ? (e['keypoints'] as List)
+                              .map((k) => Keypoint(k[0], k[1]))
+                              .toList()
+                          : null,
+                      e['confidenceInClass'],
+                      e['detectedClass']);
+                },
+              ).toList();
+            }
+            setState(
+              () {
+                // With android, the inference result of the camera streaming image is tilted 90 degrees,
+                // so the vertical and horizontal directions are reversed.
+                _imageWidth = cameraImage.height;
+                _imageHeight = cameraImage.width;
+                _recognitions = recognitions;
+              },
+            );
+          },
+        ).whenComplete(
+          () => Future.delayed(
+            const Duration(
+              milliseconds: 100,
+            ),
+            () {
+              setState(() => _isDetecting = false);
+            },
+          ),
+        );
+      },
+    );
   }
 
   Future loadModel() async {
@@ -58,8 +151,6 @@ class _MyAppState extends State<MyApp> {
     final image = _selectedImage ??
         await getImageFileFromAssets('assets/images/${_imageList[_index]}');
     final decodedImage = await decodeImageFromList(image.readAsBytesSync());
-    _imageWidth = decodedImage.width;
-    _imageHeight = decodedImage.height;
     final predictions = await FlutterD2go.getImagePrediction(
       image: image,
       minScore: 0.8,
@@ -87,9 +178,13 @@ class _MyAppState extends State<MyApp> {
       ).toList();
     }
 
-    setState(() {
-      _recognitions = recognitions;
-    });
+    setState(
+      () {
+        _imageWidth = decodedImage.width;
+        _imageHeight = decodedImage.height;
+        _recognitions = recognitions;
+      },
+    );
   }
 
   Future<File> getImageFileFromAssets(String path) async {
@@ -118,6 +213,17 @@ class _MyAppState extends State<MyApp> {
             : Image.file(_selectedImage!),
       ),
     );
+
+    if (_isLiveModeOn) {
+      stackChildren.add(
+        Positioned(
+          top: 0.0,
+          left: 0.0,
+          width: screenWidth,
+          child: CameraPreview(controller!),
+        ),
+      );
+    }
 
     if (_recognitions != null) {
       final aspectRatio = _imageHeight! / _imageWidth! * screenWidth;
@@ -179,36 +285,53 @@ class _MyAppState extends State<MyApp> {
           ),
           const SizedBox(height: 48),
           MyButton(
-            onPressed: detect,
+            onPressed: !_isLiveModeOn ? detect : null,
             text: 'Detect',
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 48.0),
+            padding: const EdgeInsets.symmetric(vertical: 48),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 MyButton(
-                    onPressed: () => setState(() {
-                          _recognitions = null;
-                          if (_selectedImage == null) {
-                            _index != 2 ? _index += 1 : _index = 0;
-                          } else {
-                            _selectedImage = null;
-                          }
-                        }),
+                    onPressed: () => setState(
+                          () {
+                            _recognitions = null;
+                            if (_selectedImage == null) {
+                              _index != 2 ? _index += 1 : _index = 0;
+                            } else {
+                              _selectedImage = null;
+                            }
+                          },
+                        ),
                     text: 'Test Image\n${_index + 1}/${_imageList.length}'),
                 MyButton(
                     onPressed: () async {
                       final XFile? pickedFile =
                           await _picker.pickImage(source: ImageSource.gallery);
                       if (pickedFile == null) return;
-                      setState(() {
-                        _recognitions = null;
-                        _selectedImage = File(pickedFile.path);
-                      });
+                      setState(
+                        () {
+                          _recognitions = null;
+                          _selectedImage = File(pickedFile.path);
+                        },
+                      );
                     },
                     text: 'Select'),
-                MyButton(onPressed: () {}, text: 'Live'),
+                MyButton(
+                    onPressed: () async {
+                      _isLiveModeOn
+                          ? await controller!.stopImageStream()
+                          : await live();
+                      setState(
+                        () {
+                          _isLiveModeOn = !_isLiveModeOn;
+                          _recognitions = null;
+                          _selectedImage = null;
+                        },
+                      );
+                    },
+                    text: 'Live'),
               ],
             ),
           ),
@@ -222,7 +345,7 @@ class MyButton extends StatelessWidget {
   const MyButton({Key? key, required this.onPressed, required this.text})
       : super(key: key);
 
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final String text;
 
   @override
@@ -372,12 +495,7 @@ class RecognitionModel {
 }
 
 class Rectangle {
-  Rectangle(
-    this.left,
-    this.top,
-    this.right,
-    this.bottom,
-  );
+  Rectangle(this.left, this.top, this.right, this.bottom);
   double left;
   double top;
   double right;
@@ -385,10 +503,7 @@ class Rectangle {
 }
 
 class Keypoint {
-  Keypoint(
-    this.x,
-    this.y,
-  );
+  Keypoint(this.x, this.y);
   double x;
   double y;
 }

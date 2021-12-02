@@ -1,10 +1,11 @@
 package com.tsubauaaa.flutter_d2go;
 
 /**
- * <p>BitmapHeader</>
- * This class is a class that infers using the d2go model
+ * <p>MaskBitmapHeader</>
+ *
+ * Class to create byte[] of Bitmap Header for instance segmentation masks
  */
-public class BitmapHeader {
+public class MaskBitmapHeader {
 
     // Bitmap file header size and info header size
     // @see <a href="https://en.wikipedia.org/wiki/BMP_file_format#Bitmap_file_header">https://en.wikipedia.org/wiki/BMP_file_format#Bitmap_file_header</a>
