@@ -8,12 +8,14 @@ import UIKit
 ///
 public class SwiftFlutterD2goPlugin: NSObject, FlutterPlugin {
 
+    private var registrar: FlutterPluginRegistrar!
     var module: TorchModule?
     
     public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(name: "tsubauaaa.com/flutter_d2go", binaryMessenger: registrar.messenger())
         let instance = SwiftFlutterD2goPlugin()
         registrar.addMethodCallDelegate(instance, channel: channel)
+        instance.registrar = registrar
     }
 
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -35,9 +37,11 @@ public class SwiftFlutterD2goPlugin: NSObject, FlutterPlugin {
     /// - Returns: If successful, return the string "success" in result.success.
     ///
     private func loadModel(args: Dictionary<String, AnyObject>) -> String {
-        let absModelPath = args["absModelPath"] as! String
+        let assetModelPath = args["assetModelPath"] as! String
         let absLabelPath = args["absLabelPath"] as! String
-        module = TorchModule(loadModel: absModelPath, absLabelPath: absLabelPath)
+        let modelKeyForAsset = registrar.lookupKey(forAsset: assetModelPath)
+        let absModelPath = Bundle.main.path(forResource: modelKeyForAsset, ofType: nil)
+        module = TorchModule(loadModel: absModelPath!, absLabelPath: absLabelPath)
         print("Model Loaded")
         return "success"
     }
@@ -55,8 +59,8 @@ public class SwiftFlutterD2goPlugin: NSObject, FlutterPlugin {
     ///
     private func predictImage(args: Dictionary<String, AnyObject>) -> [[String: Any]] {
         let data:FlutterStandardTypedData = args["image"] as! FlutterStandardTypedData
-        let inputWidth  = args["width"] as! Int
-        let inputHeight = args["height"] as! Int
+        let inputWidth  = args["inputWidth"] as! Int
+        let inputHeight = args["inputHeight"] as! Int
         let mean = args["mean"] as! [Float32]
         let std = args["std"] as! [Float32]
         
