@@ -20,7 +20,7 @@ public class FlutterD2goPlugin implements FlutterPlugin {
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
     final MethodChannel channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(),
             CHANNEL_NAME);
-    handler = new FlutterD2goHandler(flutterPluginBinding.getApplicationContext());
+    handler = new FlutterD2goHandler(flutterPluginBinding.getApplicationContext(), flutterPluginBinding.getFlutterAssets());
     channel.setMethodCallHandler(handler);
   }
 

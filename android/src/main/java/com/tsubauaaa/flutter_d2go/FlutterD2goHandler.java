@@ -1,6 +1,8 @@
 package com.tsubauaaa.flutter_d2go;
 
 import android.content.Context;
+import android.content.res.AssetFileDescriptor;
+import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
@@ -14,7 +16,10 @@ import org.pytorch.torchvision.TensorImageUtils;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,7 +29,10 @@ import java.util.Map;
 import java.util.Random;
 
 import androidx.annotation.NonNull;
+import io.flutter.FlutterInjector;
 import io.flutter.Log;
+import io.flutter.embedding.engine.loader.FlutterLoader;
+import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 
@@ -37,6 +45,7 @@ import static java.util.Objects.requireNonNull;
  */
 public class FlutterD2goHandler implements MethodChannel.MethodCallHandler {
     private final Context context;
+    private final FlutterPlugin.FlutterAssets flutterAssets;
 
     // Dealing with torchvision options problem
     // @see <a href="https://discuss.pytorch.org/t/torchvision-ops-nms-on-android-mobile/81017/6">https://discuss.pytorch.org/t/torchvision-ops-nms-on-android-mobile/81017/6</a>
@@ -51,8 +60,9 @@ public class FlutterD2goHandler implements MethodChannel.MethodCallHandler {
     private Module module;
     private final ArrayList<String> classes = new ArrayList<>();
 
-    public FlutterD2goHandler(Context context) {
+    public FlutterD2goHandler(Context context, FlutterPlugin.FlutterAssets flutterAssets) {
         this.context = context;
+        this.flutterAssets = flutterAssets;
     }
 
     @Override
@@ -86,7 +96,31 @@ public class FlutterD2goHandler implements MethodChannel.MethodCallHandler {
     private void loadModel(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
         try {
             classes.clear();
-            String absModelPath = call.argument("absModelPath");
+            String assetModelPath = call.argument("assetModelPath");
+            FlutterLoader loader = FlutterInjector.instance().flutterLoader();
+            String keyForAsset = loader.getLookupKeyForAsset(assetModelPath);
+            Log.i("flutter_d2go", context.getApplicationContext().getApplicationInfo().dataDir);
+            Log.i("flutter_d2go", keyForAsset);
+            String absModelPath = context.getApplicationContext().getApplicationInfo().dataDir + "/" + keyForAsset;
+
+            AssetManager assetManager = context.getAssets();
+            InputStream is = assetManager.open(keyForAsset);
+            byte[] buffer = new byte[is.available()];
+            is.read(buffer);
+
+            File absModelFile = new File(absModelPath);
+            if (absModelFile.exists()) {
+                absModelFile.delete();
+            }
+            String absModelDir = absModelPath.substring(0, absModelPath.lastIndexOf("/"));
+            File absModelDirFile = new File(absModelDir);
+            if (!absModelDirFile.exists()) {
+                absModelDirFile.mkdirs();
+            }
+            absModelFile.createNewFile();
+            OutputStream os = new FileOutputStream(absModelFile);
+            os.write(buffer);
+
             module = Module.load(absModelPath);
 
             String absLabelPath = call.argument("absLabelPath");
