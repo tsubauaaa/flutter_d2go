@@ -6,9 +6,9 @@ Flutter Plugin inferring using [d2go](https://github.com/facebookresearch/d2go),
 
 ## Features
 
-- Class and boundary box by object detection (Android and iOS)
-- Mask data by instance segmentation (Android only)
-- Keypoints by keypoint estimation (Android only)
+- Get class and boundary box by object detection (Android and iOS)
+- Get mask data by instance segmentation (Android only)
+- Get keypoints by keypoint estimation (Android only)
 - Live inference for camera stream images (Android only)
 
 ## Preview
@@ -70,10 +70,10 @@ List<Map<String, dynamic>> output = await FlutterD2go.getImagePrediction(
 List<Map<String, dynamic>> output = await FlutterD2go.getStreamImagePrediction(
     imageBytesList: cameraImage.planes.map((plane) => plane.bytes).toList(),             // required List<Uint8List> image byte array
     imageBytesPerPixel: cameraImage.planes.map((plane) => plane.bytesPerPixel).toList(), // default to [1, 2, 2]
-    kWidth: cameraImage.width,              // default to 720
-    kHeight: cameraImage.height,            // default to 1280
-    kInputWidth: 320,                       // defaults to 320
-    kInputHeight: 320,                      // defaults to 320
+    width: cameraImage.width,              // default to 720
+    height: cameraImage.height,            // default to 1280
+    inputWidth: 320,                       // defaults to 320
+    inputHeight: 320,                      // defaults to 320
     mean: [0.0, 0.0, 0.0],                  // defaults to [0.0, 0.0, 0.0]
     std: [1.0, 1.0, 1.0],                   // defaults to [1.0, 1.0, 1.0]
     minScore: 0.7,                          // default to 0.5
