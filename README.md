@@ -6,7 +6,7 @@ Flutter Plugin inferring using [d2go](https://github.com/facebookresearch/d2go),
 
 ## Features
 
-- Get class and boundary box by object detection (Android and iOS)
+- Get class and boundary box by object detection
 - Get mask data by instance segmentation (Android only)
 - Get keypoints by keypoint estimation (Android only)
 - Live inference for camera stream images (Android only)
