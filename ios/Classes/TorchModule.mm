@@ -11,17 +11,17 @@
 
 /// Load the d2go model and get pytorch module in [_module]. Read the classes file and add classes to [_classes].
 ///
-/// @param absModelPath The path of the D2Go model loaded by the load of org.pytorch.Module.
-/// @param absLabelPath The path of the file where the class is written.
+/// @param modelPath The path of the D2Go model loaded by the load of org.pytorch.Module.
+/// @param labelPath The path of the file where the class is written.
 /// 
-- (nullable instancetype)initWithLoadModel:(NSString*)absModelPath absLabelPath:(NSString*)absLabelPath {
+- (nullable instancetype)initWithLoadModel:(NSString*)modelPath labelPath:(NSString*)labelPath {
     self = [super init];
     if (self) {
       try {
-          _module = torch::jit::load(absModelPath.UTF8String);
+          _module = torch::jit::load(modelPath.UTF8String);
           _module.eval();
           NSError *error;
-          NSString* lines = [NSString stringWithContentsOfFile:absLabelPath
+          NSString* lines = [NSString stringWithContentsOfFile:labelPath
                                                         encoding:NSUTF8StringEncoding
                                                            error:&error];
           if (error) {
