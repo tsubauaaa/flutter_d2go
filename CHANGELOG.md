@@ -1,3 +1,7 @@
+## 0.4.9
+
+- Eliminates path_provider and path library dependencies.
+
 ## 0.4.8
 
 - Implemented stream image inference function.
