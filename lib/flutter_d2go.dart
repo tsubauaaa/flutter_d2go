@@ -40,7 +40,7 @@ class FlutterD2go {
       MethodChannel('tsubauaaa.com/flutter_d2go');
 
   /// Receive the d2go relative path [modelPath] and [labelPath] in Flutter's asset.
-  /// A method that calls loadModel with invokeMethod and creates pytorch module and labe ArrayList on the Native side.
+  /// A method that calls loadModel with invokeMethod and creates pytorch module and label ArrayList on the Native side.
   /// Returns success string on success and Null on failure.
   static Future<String?> loadModel(
       {required String modelPath, required String labelPath}) async {
@@ -53,10 +53,10 @@ class FlutterD2go {
   /// Using the image file [image] (required) for inference, the image size for inference [inputWidth], [inputHeight],
   /// the mean [mean] and standard deviation [std] for image normalization,
   /// the threshold of the inference result [minScore], and get the inference result.
-  /// The format is List of { "rect": { "left": double, "top": double, "right": double, "bottom": double },
+  /// The format is List of `{ "rect": { "left": double, "top": double, "right": double, "bottom": double },
   ///                         "mask": Uint8List,
   ///                         "keypoints": [[double, double], [double, double], [double, double], [double, double], ...],
-  ///                         "confidenceInClass": double, "detectedClass": String }. "mask" and "keypoints" do not exist on some models.
+  ///                         "confidenceInClass": double, "detectedClass": String }`. "mask" and "keypoints" do not exist on some models.
   static Future<List> getImagePrediction({
     required File image,
     int inputWidth = kInputWidth,
