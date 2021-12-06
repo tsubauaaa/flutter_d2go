@@ -15,15 +15,6 @@ void main() {
 
   final Directory current = Directory.current;
 
-  setUpAll(() {
-    // expose path_provider
-    const MethodChannel pathProviderChannel =
-        MethodChannel('plugins.flutter.io/path_provider');
-    pathProviderChannel.setMockMethodCallHandler((MethodCall methodCall) async {
-      return ".";
-    });
-  });
-
   setUp(() {
     channel.setMockMethodCallHandler((MethodCall methodCall) async {
       log.add(methodCall);
@@ -72,10 +63,8 @@ void main() {
     expect(res, "success");
     expect(log, <Matcher>[
       isMethodCall('loadModel', arguments: <String, dynamic>{
-        'absModelPath': '${current.path}/example/assets/models/d2go.pt',
-        'absLabelPath': '${current.path}/example/assets/models/classes.txt',
-        'assetModelPath': '${current.path}/example/assets/models/d2go.pt',
-        'assetLabelPath': '${current.path}/example/assets/models/classes.txt',
+        'modelPath': '${current.path}/example/assets/models/d2go.pt',
+        'labelPath': '${current.path}/example/assets/models/classes.txt',
       })
     ]);
   });

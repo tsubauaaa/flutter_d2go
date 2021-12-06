@@ -8,12 +8,14 @@ import UIKit
 ///
 public class SwiftFlutterD2goPlugin: NSObject, FlutterPlugin {
 
+    private var registrar: FlutterPluginRegistrar!
     var module: TorchModule?
     
     public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(name: "tsubauaaa.com/flutter_d2go", binaryMessenger: registrar.messenger())
         let instance = SwiftFlutterD2goPlugin()
         registrar.addMethodCallDelegate(instance, channel: channel)
+        instance.registrar = registrar
     }
 
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -30,16 +32,23 @@ public class SwiftFlutterD2goPlugin: NSObject, FlutterPlugin {
     
     /// Call Objective-C pytorch module to load model and classes.
     ///
-    /// - Parameter args: `absModelPath` is the path of the D2Go model loaded by the load of pytorch module.
-    ///                   `absLabelPath` is the path of the file where the class is written.
+    /// - Parameter args: `modelPath` is the path of the D2Go model loaded by the load of pytorch module.
+    ///                   `labelPath` is the path of the file where the class is written.
     /// - Returns: If successful, return the string "success" in result.success.
     ///
     private func loadModel(args: Dictionary<String, AnyObject>) -> String {
-        let absModelPath = args["absModelPath"] as! String
-        let absLabelPath = args["absLabelPath"] as! String
-        module = TorchModule(loadModel: absModelPath, absLabelPath: absLabelPath)
-        print("Model Loaded")
-        return "success"
+        let modelPathInFlutterAsset = args["modelPath"] as! String
+        let labelPathInFlutterAsset = args["labelPath"] as! String
+        let modelKeyForAsset = registrar.lookupKey(forAsset: modelPathInFlutterAsset)
+        let modelPathInAppDir = Bundle.main.path(forResource: modelKeyForAsset, ofType: nil)
+        let lableKeyForAsset = registrar.lookupKey(forAsset: labelPathInFlutterAsset)
+        let labelPathInAppDir = Bundle.main.path(forResource: lableKeyForAsset, ofType: nil)
+        if (modelPathInAppDir != nil && labelPathInAppDir != nil) {
+            module = TorchModule(loadModel: modelPathInAppDir!, labelPath: labelPathInAppDir!)
+            print("Model Loaded")
+            return "success"
+        }
+        return "Copy \(modelPathInFlutterAsset) or \(labelPathInFlutterAsset) failed."
     }
 
     
@@ -55,8 +64,8 @@ public class SwiftFlutterD2goPlugin: NSObject, FlutterPlugin {
     ///
     private func predictImage(args: Dictionary<String, AnyObject>) -> [[String: Any]] {
         let data:FlutterStandardTypedData = args["image"] as! FlutterStandardTypedData
-        let inputWidth  = args["width"] as! Int
-        let inputHeight = args["height"] as! Int
+        let inputWidth  = args["inputWidth"] as! Int
+        let inputHeight = args["inputHeight"] as! Int
         let mean = args["mean"] as! [Float32]
         let std = args["std"] as! [Float32]
         

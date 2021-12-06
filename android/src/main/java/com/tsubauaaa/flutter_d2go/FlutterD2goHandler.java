@@ -1,6 +1,7 @@
 package com.tsubauaaa.flutter_d2go;
 
 import android.content.Context;
+import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
@@ -14,7 +15,11 @@ import org.pytorch.torchvision.TensorImageUtils;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,7 +29,9 @@ import java.util.Map;
 import java.util.Random;
 
 import androidx.annotation.NonNull;
+import io.flutter.FlutterInjector;
 import io.flutter.Log;
+import io.flutter.embedding.engine.loader.FlutterLoader;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 
@@ -77,33 +84,90 @@ public class FlutterD2goHandler implements MethodChannel.MethodCallHandler {
     /**
      * <p>Load the d2go model and get org.pytorch.Module in [module]. Read the classes file and add classes to [classes]</>
      *
-     * @param call absModelPath The path of the D2Go model loaded by the load of org.pytorch.Module.
-     *             assetModelPath Flutter asset path of D2Go model used to display log when model or classes loading fails.
-     *             absLabelPath The path of the file where the class is written.
-     *             assetLabelPath Flutter asset path of classes file used to display log when model or classes loading fails.
+     * @param call modelPath The path of the D2Go model loaded by the load of org.pytorch.Module.
+     *             labelPath The path of the file where the class is written.
      * @param result If successful, return the string "success" in result.success.
      */
     private void loadModel(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
+        classes.clear();
+        String modelPathInFlutterAsset = call.argument("modelPath");
+        String modelPathInAppDir = getFilePathInAppDir(modelPathInFlutterAsset);
+        String labelPathInFlutterAsset = call.argument("labelPath");
+        String labelPathInAppDir = getFilePathInAppDir(labelPathInFlutterAsset);
+        File labels = new File(requireNonNull(labelPathInAppDir));
         try {
-            classes.clear();
-            String absModelPath = call.argument("absModelPath");
-            module = Module.load(absModelPath);
+            module = Module.load(modelPathInAppDir);
 
-            String absLabelPath = call.argument("absLabelPath");
-            File labels = new File(requireNonNull(absLabelPath));
-            BufferedReader br = new BufferedReader(new FileReader(labels));
+            BufferedReader bufferedReader = new BufferedReader(new FileReader(labels));
             String line;
-            while ((line = br.readLine()) != null) {
+            while ((line = bufferedReader.readLine()) != null) {
                 classes.add(line);
             }
             result.success("success");
         } catch (Exception e) {
-            String assetModelPath = call.argument("assetModelPath");
-            String assetLabelPath = call.argument("assetLabelPath");
-            Log.e("flutter_d2go", assetModelPath + " or " + assetLabelPath + " are not a proper model or label", e);
+            Log.e("flutter_d2go", modelPathInFlutterAsset + " or " + labelPathInFlutterAsset + " are not a proper model or label", e);
         }
     }
 
+    /**
+     * <p>Copy the files in flutter asset to Android application directory</>
+     *
+     * @param flutterAssetPath File path in a Flutter asset.
+     * @return Path under Application directory where files in Flutter assets are copied.
+     */
+    private String getFilePathInAppDir(String flutterAssetPath) {
+        FlutterLoader loader = FlutterInjector.instance().flutterLoader();
+        String flutterAssetFilePath = loader.getLookupKeyForAsset(flutterAssetPath);
+
+        // Path under Application Directory
+        String filePathInAppDir = context.getApplicationContext().getApplicationInfo().dataDir + "/" + flutterAssetFilePath;
+
+        AssetManager assetManager = context.getAssets();
+        InputStream inputStream = null;
+        OutputStream outputStreams = null;
+
+        try {
+            // Read a file in a Flutter asset
+            inputStream = assetManager.open(flutterAssetFilePath);
+            byte[] buffer = new byte[inputStream.available()];
+            inputStream.read(buffer);
+
+            // Delete the copy destination file if it already exists
+            File fileInAppDir = new File(filePathInAppDir);
+            if (fileInAppDir.exists()) {
+                fileInAppDir.delete();
+            }
+
+            // Create the copy destination sub directory if it already doesn't exists
+            String dirPathInAppSubDir = filePathInAppDir.substring(0, filePathInAppDir.lastIndexOf("/"));
+            File dirInAppDir = new File(dirPathInAppSubDir);
+            if (!dirInAppDir.exists()) {
+                dirInAppDir.mkdirs();
+            }
+
+            // Create the copy destination directory
+            fileInAppDir.createNewFile();
+
+            // Copy the files in the Flutter asset under the Application Directory
+            OutputStream os = new FileOutputStream(fileInAppDir);
+            os.write(buffer);
+
+        }catch (Exception e) {
+            Log.e("flutter_d2go", String.format("Copy %s failed", flutterAssetPath), e);
+        } finally {
+            try {
+                if (inputStream != null) {
+                    inputStream.close();
+                }
+                if (outputStreams != null) {
+                    outputStreams.close();
+                }
+            } catch (IOException e) {
+                Log.e("flutter_d2go", "Close stream failed", e);
+            }
+        }
+        return filePathInAppDir;
+    }
 
     /**
      * <p>Create an input image from static image for inference and return the inference result to Flutter</>
