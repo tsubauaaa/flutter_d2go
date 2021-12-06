@@ -70,10 +70,10 @@ List<Map<String, dynamic>> output = await FlutterD2go.getImagePrediction(
 List<Map<String, dynamic>> output = await FlutterD2go.getStreamImagePrediction(
     imageBytesList: cameraImage.planes.map((plane) => plane.bytes).toList(),             // required List<Uint8List> image byte array
     imageBytesPerPixel: cameraImage.planes.map((plane) => plane.bytesPerPixel).toList(), // default to [1, 2, 2]
-    width: cameraImage.width,              // default to 720
-    height: cameraImage.height,            // default to 1280
-    inputWidth: 320,                       // defaults to 320
-    inputHeight: 320,                      // defaults to 320
+    width: cameraImage.width,               // default to 720
+    height: cameraImage.height,             // default to 1280
+    inputWidth: 320,                        // defaults to 320
+    inputHeight: 320,                       // defaults to 320
     mean: [0.0, 0.0, 0.0],                  // defaults to [0.0, 0.0, 0.0]
     std: [1.0, 1.0, 1.0],                   // defaults to [1.0, 1.0, 1.0]
     minScore: 0.7,                          // default to 0.5
