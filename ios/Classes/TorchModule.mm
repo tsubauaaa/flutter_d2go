@@ -39,7 +39,8 @@
 
 
 /// Infer using the D2Go model, format the result and return it.
-/// @param imageBuffer <#imageBuffer description#>
+///
+/// @param imageBuffer Bytes of the image to be inferred.
 /// @param inputWidth width of image when inferring to d2go model.
 /// @param inputHeight height of image when inferring to d2go model.
 /// @param widthScale the increase / decrease ratio between the image and the original image.
