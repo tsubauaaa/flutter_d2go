@@ -67,6 +67,9 @@
         auto boxesTensor = outputDict.at("boxes").toTensor();
         auto scoresTensor = outputDict.at("scores").toTensor();
         auto labelsTensor = outputDict.at("labels").toTensor();
+        
+        auto hasKeypoints = outputDict.contains("keypoints");
+        
     
         // [boxesBuffer] has 4 sets of left, top, right and bottom per instance
         // boxesBuffer = [left1, top1, right1, bottom1, left2, top2, right2, bottom2, left3, top3, ..., bottomN]
@@ -99,6 +102,29 @@
             [rect setObject:@(boxesBuffer[4 * i + 3] * heightScale) forKey:@"bottom"];
             
             [output setObject:rect forKey:@"rect"];
+            
+            if (hasKeypoints) {
+                auto keypointsTensor = outputDict.at("keypoints").toTensor();
+                float* keypointsBuffer = keypointsTensor.data_ptr<float>();
+                int numOfKeypoints = 17;
+
+                NSMutableArray *keypoints = [NSMutableArray array];
+                for (int j = i; j < 3 * numOfKeypoints; j++) {
+                    [keypoints addObject:[NSNumber numberWithFloat:keypointsBuffer[j]]];
+                }
+                NSMutableArray *keypointsList = [NSMutableArray array];
+                for (int k = 0; k < keypoints.count; k = 3 + k) {
+                    float x = [keypoints[k] floatValue] * (float) widthScale;
+                    float y = [keypoints[k+1] floatValue] * (float) heightScale;
+                    NSArray *keypoint = [[NSArray alloc] initWithObjects:
+                                         [NSNumber numberWithFloat:x],
+                                         [NSNumber numberWithFloat:y],
+                                         nil];
+                    [keypointsList addObject:keypoint];
+                }
+                
+                [output setObject:keypointsList forKey:@"keypoints"];
+            }
             
             [output setObject:@(scoresBuffer[i]) forKey:@"confidenceInClass"];
             [output setObject:[_classes objectAtIndex:labelsBuffer[i] - 1] forKey:@"detectedClass"];
