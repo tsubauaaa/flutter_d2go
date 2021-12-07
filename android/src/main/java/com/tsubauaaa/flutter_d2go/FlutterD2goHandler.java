@@ -106,6 +106,7 @@ public class FlutterD2goHandler implements MethodChannel.MethodCallHandler {
             result.success("success");
         } catch (Exception e) {
             Log.e("flutter_d2go", modelPathInFlutterAsset + " or " + labelPathInFlutterAsset + " are not a proper model or label", e);
+            result.error("load model or label failed", modelPathInFlutterAsset + " or " + labelPathInFlutterAsset + " are not a proper model or label", e);
         }
     }
 
