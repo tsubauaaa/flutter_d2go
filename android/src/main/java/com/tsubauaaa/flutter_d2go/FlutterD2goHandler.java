@@ -215,7 +215,8 @@ public class FlutterD2goHandler implements MethodChannel.MethodCallHandler {
         Bitmap resizedBitmap = streamImageUtils.getBitmap(inputWidth, inputHeight);
 
         // Get formatted inference results and register in result.success
-        result.success(createOutputsFromPredictions(resizedBitmap, meanDouble, stdDouble, minScore, width, height));
+        // the camera streaming imageMap is tilted 90 degrees, so the vertical and horizontal directions are reversed
+        result.success(createOutputsFromPredictions(resizedBitmap, meanDouble, stdDouble, minScore, height, width));
     }
 
     /**
