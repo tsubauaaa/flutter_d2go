@@ -75,12 +75,10 @@ public class SwiftFlutterD2goPlugin: NSObject, FlutterPlugin {
         guard var pixelBuffer = resizedImage.normalized(mean: mean, std: std) else {
                   return []
         }
-        let imageWidthScale = image.size.width/Double(inputWidth)
-        let imageHeightScale = image.size.height/Double(inputHeight)
         let threshold = args["minScore"] as! Double
         
         // Call Objective-C's pytorch module.
-        guard let outputs = self.module?.predictImage(&pixelBuffer, inputWidth: Int32(inputWidth), inputHeight: Int32(inputHeight), widthScale: imageWidthScale, heightScale: imageHeightScale, threshold: threshold) else {
+        guard let outputs = self.module?.predictImage(&pixelBuffer, width: Int32(image.size.width), height: Int32(image.size.height), inputWidth: Int32(inputWidth), inputHeight: Int32(inputHeight), threshold: threshold) else {
             return []
         }
         
