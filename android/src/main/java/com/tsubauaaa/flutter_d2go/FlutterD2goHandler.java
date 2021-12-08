@@ -189,12 +189,8 @@ public class FlutterD2goHandler implements MethodChannel.MethodCallHandler {
         Bitmap bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, requireNonNull(imageBytes).length);
         Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap, inputWidth, inputHeight, true);
 
-        // Get the increase / decrease ratio between the bitmap and the original image
-        float imageWidthScale = (float)bitmap.getWidth() / inputWidth;
-        float imageHeightScale = (float)bitmap.getHeight() / inputHeight;
-
         // Get formatted inference results and register in result.success
-        result.success(createOutputsFromPredictions(resizedBitmap, meanDouble, stdDouble, minScore, imageWidthScale, imageHeightScale));
+        result.success(createOutputsFromPredictions(resizedBitmap, meanDouble, stdDouble, minScore, bitmap.getWidth(), bitmap.getHeight()));
     }
 
 
@@ -218,13 +214,8 @@ public class FlutterD2goHandler implements MethodChannel.MethodCallHandler {
         // Create a bitmap object from the imageMap and add fit the size to the model and orientation by 90 degrees
         Bitmap resizedBitmap = streamImageUtils.getBitmap(inputWidth, inputHeight);
 
-        // Get the increase / decrease ratio between the bitmap and the original imageMap
-        // the camera streaming imageMap is tilted 90 degrees, so the vertical and horizontal directions are reversed
-        float imageWidthScale = height / inputWidth;
-        float imageHeightScale = width / inputHeight;
-
         // Get formatted inference results and register in result.success
-        result.success(createOutputsFromPredictions(resizedBitmap, meanDouble, stdDouble, minScore, imageWidthScale, imageHeightScale));
+        result.success(createOutputsFromPredictions(resizedBitmap, meanDouble, stdDouble, minScore, width, height));
     }
 
     /**
@@ -234,15 +225,15 @@ public class FlutterD2goHandler implements MethodChannel.MethodCallHandler {
      * @param meanDouble Average value used in Normalize
      * @param stdDouble Standard deviation used in Normalize
      * @param minScore If this threshold is not met, it will not be included in the results
-     * @param imageWidthScale the increase / decrease ratio of width between the formatted bitmap and the original image
-     * @param imageHeightScale the increase / decrease ratio of height between the formatted bitmap and the original image
+     * @param width The size of the width of the image to be inferred
+     * @param height The size of the height of the image to be inferred
      * @return A formatted version of the inference result
      *         The format is List of { "rect": { "left": Float, "top": Float, "right": Float, "bottom": Float },
      *                                 "mask": [byte, byte, byte, byte, byte, byte, byte, byte, byte, byte, byte, byte, byte, byte, byte, byte, byte ...],
      *                                 "keypoints": [[Float, Float], [Float, Float], [Float, Float], [Float, Float], ...],
      *                                 "confidenceInClass": Float, "detectedClass": String }. "mask" and "keypoints" do not exist on some models.
      */
-    private List<Map<String, Object>> createOutputsFromPredictions(Bitmap bitmap, ArrayList<Double> meanDouble, ArrayList<Double> stdDouble, double minScore, float imageWidthScale, float imageHeightScale ) {
+    private List<Map<String, Object>> createOutputsFromPredictions(Bitmap bitmap, ArrayList<Double> meanDouble, ArrayList<Double> stdDouble, double minScore, int width, int height ) {
 
         // Convert [mean] and [std] to float
         float[] mean = toFloatPrimitives(requireNonNull(meanDouble).toArray(new Double[0]));
@@ -284,6 +275,10 @@ public class FlutterD2goHandler implements MethodChannel.MethodCallHandler {
                 Map<String, Object> output = new LinkedHashMap<>();
                 Map<String, Float> rect = new LinkedHashMap<>();
 
+                // The increase / decrease ratio of width between the formatted bitmap and the original image
+                float imageWidthScale = width / (float) bitmap.getWidth();
+                float imageHeightScale = height / (float) bitmap.getHeight();
+
                 // Set rect to a value that matches the original image
                 rect.put("left", boxesData[4 * i] * imageWidthScale);
                 rect.put("top", boxesData[4 * i + 1] * imageHeightScale);
@@ -304,7 +299,7 @@ public class FlutterD2goHandler implements MethodChannel.MethodCallHandler {
                     // keypointsData is in a format with 17 * (x, y, score) for each instance. (coco estimates have 17 keypoints)
                     final Tensor keypointsTensor = requireNonNull(map.get("keypoints")).toTensor();
                     final float[] keypointsData = keypointsTensor.getDataAsFloatArray();
-                    output.put("keypoints", getKeypointsList(keypointsData, i, bitmap.getWidth(), bitmap.getHeight()));
+                    output.put("keypoints", getKeypointsList(keypointsData, i, width, height));
                 }
 
                 output.put("confidenceInClass", scoresData[i]);
