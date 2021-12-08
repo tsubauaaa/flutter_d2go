@@ -384,12 +384,12 @@ public class FlutterD2goHandler implements MethodChannel.MethodCallHandler {
     private List<float[]> getKeypointsList(float[] keypointsData, int instanceIndex, int imageWidth, int imageHeight) {
         // coco estimates have 17 keypoints
         final int numOfKeypoints = 17;
-        final float[] keypoints = Arrays.copyOfRange(keypointsData, instanceIndex * 3 * numOfKeypoints, (instanceIndex + 1) * 3 * numOfKeypoints);
+        final float[] keypointsPerInstance = Arrays.copyOfRange(keypointsData, instanceIndex * 3 * numOfKeypoints, (instanceIndex + 1) * 3 * numOfKeypoints);
         List<float[]> keypointsList = new ArrayList<>();
-        for (int i = 0; i < keypoints.length; i = 3 + i) {
+        for (int i = 0; i < keypointsPerInstance.length; i = 3 + i) {
             // Since the d2go model output assumes that the input image size is 320 * 320, match the scale with the image to be inferred
-            final float x = keypoints[i] * imageWidth / 320;
-            final float y = keypoints[i+1] * imageHeight / 320;
+            final float x = keypointsPerInstance[i] * imageWidth / 320;
+            final float y = keypointsPerInstance[i+1] * imageHeight / 320;
             final float[] keypoint = {x, y};
             keypointsList.add(keypoint);
         }

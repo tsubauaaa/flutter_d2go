@@ -109,20 +109,21 @@
             [output setObject:rect forKey:@"rect"];
             
             if (hasKeypoints) {
+                // keypointsData is in a format with 17 * (x, y, score) for each instance. (coco estimates have 17 keypoints)
                 auto keypointsTensor = outputDict.at("keypoints").toTensor();
                 float* keypointsBuffer = keypointsTensor.data_ptr<float>();
                 // coco estimates have 17 keypoints
                 int numOfKeypoints = 17;
-
-                NSMutableArray *keypoints = [NSMutableArray array];
-                for (int j = i; j < 3 * numOfKeypoints; j++) {
-                    [keypoints addObject:[NSNumber numberWithFloat:keypointsBuffer[j]]];
+                
+                NSMutableArray *keypointsPerInstance = [NSMutableArray array];
+                for (int j = i * 3 * numOfKeypoints; j < (i + 1) * 3 * numOfKeypoints; j++) {
+                    [keypointsPerInstance addObject:[NSNumber numberWithFloat:keypointsBuffer[j]]];
                 }
                 NSMutableArray *keypointsList = [NSMutableArray array];
-                for (int k = 0; k < keypoints.count; k = 3 + k) {
+                for (int k = 0; k < keypointsPerInstance.count; k = 3 + k) {
                     // Since the d2go model output assumes that the input image size is 320 * 320, match the scale with the image to be inferred
-                    float x = [keypoints[k] floatValue] * width / 320;
-                    float y = [keypoints[k+1] floatValue] * height / 320;
+                    float x = [keypointsPerInstance[k] floatValue] * width / 320;
+                    float y = [keypointsPerInstance[k+1] floatValue] * height / 320;
                     NSArray *keypoint = [[NSArray alloc] initWithObjects:
                                          [NSNumber numberWithFloat:x],
                                          [NSNumber numberWithFloat:y],
