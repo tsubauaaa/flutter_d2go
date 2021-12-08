@@ -41,11 +41,11 @@
 /// Infer using the D2Go model, format the result and return it.
 ///
 /// @param imageBuffer Bytes of the image to be inferred.
-/// @param inputWidth width of image when inferring to d2go model.
-/// @param inputHeight height of image when inferring to d2go model.
-/// @param widthScale the increase / decrease ratio between the image and the original image.
-/// @param heightScale the increase / decrease ratio between the image and the original image.
-/// @param threshold confidence threshold to exclude from inference results.
+/// @param width The size of the width of the image to be inferred.
+/// @param height The size of the height of the image to be inferred.
+/// @param inputWidth The size of the width of image when inferring to d2go model.
+/// @param inputHeight The size of height of image when inferring to d2go model.
+/// @param threshold Confidence threshold to exclude from inference results.
 ///
 /// @return Inference result.
 ///         the format of [outputs] is List of { "rect": { "left": Float, "top": Float, "right": Float, "bottom": Float },
@@ -53,7 +53,7 @@
 ///         "keypoints": [[Float, Float], [Float, Float], [Float, Float], [Float, Float], ...],
 ///         "confidenceInClass": Float, "detectedClass": String }. "mask" and "keypoints" do not exist on some models.
 ///
-- (NSArray<NSDictionary*>*)predictImage:(void*)imageBuffer inputWidth:(int)inputWidth inputHeight:(int)inputHeight widthScale:(double)widthScale heightScale:(double)heightScale threshold:(double)threshold {
+- (NSArray<NSDictionary*>*)predictImage:(void*)imageBuffer width:(int)width height:(int)height inputWidth:(int)inputWidth inputHeight:(int)inputHeight  threshold:(double)threshold {
     try {
         at::Tensor tensor = torch::from_blob(imageBuffer, {3, inputWidth, inputHeight}, at::kFloat);
         c10::InferenceMode guard;
@@ -61,7 +61,7 @@
         std::vector<torch::Tensor> v;
         v.push_back(tensor);
 
-        // inference
+        // infer
         auto outputTuple = _module.forward({at::TensorList(v)}).toTuple();
         
         auto outputDict = outputTuple->elements()[1].toList().get(0).toGenericDict();
@@ -87,6 +87,10 @@
             return nil;
         }
 
+        // The increase / decrease ratio between the image and the original image
+        double widthScale = width / (double) inputWidth;
+        double heightScale = height / (double) inputHeight;
+        
         // Inferred number of all instances
         NSMutableArray* outputs = [[NSMutableArray alloc] init];
         long num = scoresTensor.numel();
@@ -107,6 +111,7 @@
             if (hasKeypoints) {
                 auto keypointsTensor = outputDict.at("keypoints").toTensor();
                 float* keypointsBuffer = keypointsTensor.data_ptr<float>();
+                // coco estimates have 17 keypoints
                 int numOfKeypoints = 17;
 
                 NSMutableArray *keypoints = [NSMutableArray array];
@@ -115,15 +120,15 @@
                 }
                 NSMutableArray *keypointsList = [NSMutableArray array];
                 for (int k = 0; k < keypoints.count; k = 3 + k) {
-                    float x = [keypoints[k] floatValue] * (float) widthScale;
-                    float y = [keypoints[k+1] floatValue] * (float) heightScale;
+                    // Since the d2go model output assumes that the input image size is 320 * 320, match the scale with the image to be inferred
+                    float x = [keypoints[k] floatValue] * width / 320;
+                    float y = [keypoints[k+1] floatValue] * height / 320;
                     NSArray *keypoint = [[NSArray alloc] initWithObjects:
                                          [NSNumber numberWithFloat:x],
                                          [NSNumber numberWithFloat:y],
                                          nil];
                     [keypointsList addObject:keypoint];
                 }
-                
                 [output setObject:keypointsList forKey:@"keypoints"];
             }
             
