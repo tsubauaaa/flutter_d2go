@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
-import 'dart:ui';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
@@ -99,11 +98,7 @@ class _MyAppState extends State<MyApp> {
                         e['rect']['bottom'],
                       ),
                       e['mask'],
-                      e['keypoints'] != null
-                          ? (e['keypoints'] as List)
-                              .map((k) => Keypoint(k[0], k[1]))
-                              .toList()
-                          : null,
+                      e['keypoints'],
                       e['confidenceInClass'],
                       e['detectedClass']);
                 },
