@@ -98,7 +98,11 @@ class _MyAppState extends State<MyApp> {
                         e['rect']['bottom'],
                       ),
                       e['mask'],
-                      e['keypoints'],
+                      e['keypoints'] != null
+                          ? (e['keypoints'] as List)
+                          .map((k) => Keypoint(k[0], k[1]))
+                          .toList()
+                          : null,
                       e['confidenceInClass'],
                       e['detectedClass']);
                 },
@@ -129,7 +133,7 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future loadModel() async {
-    String modelPath = 'assets/models/d2go.pt';
+    String modelPath = 'assets/models/d2go_kp.pt';
     String labelPath = 'assets/models/classes.txt';
     try {
       await FlutterD2go.loadModel(
@@ -138,7 +142,7 @@ class _MyAppState extends State<MyApp> {
       );
       setState(() {});
     } on PlatformException {
-      debugPrint('only supported for android so far');
+      debugPrint('Load model or label file failed.');
     }
   }
 
