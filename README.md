@@ -6,12 +6,17 @@ Flutter Plugin inferring using [d2go](https://github.com/facebookresearch/d2go),
 
 ## Features
 
-- Get class and boundary box by object detection
-- Get keypoints by keypoint estimation
+- Get class and boundary box by object detection (Android and iOS)
+- Get keypoints by keypoint estimation (Android and iOS)
 - Get mask data by instance segmentation (Android only)
 - Live inference for camera stream images (Android only)
 
 ## Preview
+
+- Live inference for camera stream images
+
+  ![](images/live.gif)
+  ![](images/keypoint_live.gif)
 
 - Object detection and instance segmentation
 
@@ -20,10 +25,6 @@ Flutter Plugin inferring using [d2go](https://github.com/facebookresearch/d2go),
 - Keypoints estimation
 
   ![](images/keypoints.png)
-
-- Live inference for camera stream images
-
-  ![](images/live.gif)
 
 ## Installation
 
@@ -106,3 +107,7 @@ List<Map<String, dynamic>> output = await FlutterD2go.getStreamImagePrediction(
 ...
 ]
 ```
+
+### Issues
+
+Please contact [here](https://github.com/tsubauaaa/flutter_d2go/issues) if you find any bugs or features you would like to add.

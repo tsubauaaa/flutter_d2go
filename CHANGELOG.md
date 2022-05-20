@@ -1,3 +1,7 @@
+## 0.5.0
+
+- Run keypoints estimates on iOS.
+
 ## 0.4.9
 
 - Eliminates path_provider and path library dependencies.
