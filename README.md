@@ -108,6 +108,6 @@ List<Map<String, dynamic>> output = await FlutterD2go.getStreamImagePrediction(
 ]
 ```
 
-### Issues
+## Issues
 
 Please contact [here](https://github.com/tsubauaaa/flutter_d2go/issues) if you find any bugs or features you would like to add.

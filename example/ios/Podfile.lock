@@ -6,7 +6,7 @@ PODS:
     - Flutter
     - LibTorch (~> 1.9.0)
     - LibTorchvision (= 0.10.0)
-  - image_picker (0.0.1):
+  - image_picker_ios (0.0.1):
     - Flutter
   - LibTorch (1.9.0):
     - LibTorch/Core (= 1.9.0)
@@ -21,7 +21,7 @@ DEPENDENCIES:
   - camera (from `.symlinks/plugins/camera/ios`)
   - Flutter (from `Flutter`)
   - flutter_d2go (from `.symlinks/plugins/flutter_d2go/ios`)
-  - image_picker (from `.symlinks/plugins/image_picker/ios`)
+  - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
   - path_provider_ios (from `.symlinks/plugins/path_provider_ios/ios`)
 
 SPEC REPOS:
@@ -36,20 +36,20 @@ EXTERNAL SOURCES:
     :path: Flutter
   flutter_d2go:
     :path: ".symlinks/plugins/flutter_d2go/ios"
-  image_picker:
-    :path: ".symlinks/plugins/image_picker/ios"
+  image_picker_ios:
+    :path: ".symlinks/plugins/image_picker_ios/ios"
   path_provider_ios:
     :path: ".symlinks/plugins/path_provider_ios/ios"
 
 SPEC CHECKSUMS:
-  camera: fe33292aff715a981eb34d7ce7b35b54337ff34c
+  camera: 9993f92f2c793e87b65e35f3a23c70582afb05b1
   Flutter: 50d75fe2f02b26cc09d224853bb45737f8b3214a
   flutter_d2go: 967892d3466344aa7497eb65d8aa56e915c21d3e
-  image_picker: 9aa50e1d8cdacdbed739e925b7eea16d014367e6
+  image_picker_ios: b786a5dcf033a8336a657191401bfdf12017dabb
   LibTorch: d89f452b8b932002bd98884b3921850a95c35e14
   LibTorchvision: 5005f76146d310b7bb1f7ccfa618188f9e3a0dc2
-  path_provider_ios: 7d7ce634493af4477d156294792024ec3485acd5
+  path_provider_ios: 14f3d2fd28c4fdb42f44e0f751d12861c43cee02
 
 PODFILE CHECKSUM: fe28524d052975a46c416ec54dc370d5e77973a0
 
-COCOAPODS: 1.11.2
+COCOAPODS: 1.11.3

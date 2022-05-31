@@ -18,9 +18,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  image_picker: ^0.8.4+2
-  path_provider: ^2.0.5
-  camera: ^0.9.4+5
+  image_picker: ^0.8.5+3
+  path_provider: ^2.0.10
+  camera: ^0.9.7+1
 
   flutter_d2go:
     # When depending on this package from a real application you should use:

@@ -1,3 +1,7 @@
+## 0.5.1
+
+- Changes for flutter 3.0 support.
+
 ## 0.5.0
 
 - Run keypoints estimates on iOS.

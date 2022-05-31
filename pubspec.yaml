@@ -1,6 +1,6 @@
 name: flutter_d2go
 description: Flutter Plugin inferring using d2go, the mobile model of detectron2.
-version: 0.5.0
+version: 0.5.1
 homepage: https://github.com/tsubauaaa/flutter_d2go
 
 environment:
@@ -14,7 +14,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^1.0.0
+  flutter_lints: ^2.0.1
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
