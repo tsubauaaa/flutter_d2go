@@ -133,7 +133,7 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future loadModel() async {
-    String modelPath = 'assets/models/d2go.pt';
+    String modelPath = 'assets/models/d2go.ptl';
     String labelPath = 'assets/models/classes.txt';
     try {
       await FlutterD2go.loadModel(

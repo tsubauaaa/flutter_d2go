@@ -10,6 +10,8 @@ import com.facebook.soloader.nativeloader.SystemDelegate;
 
 import org.pytorch.IValue;
 import org.pytorch.Module;
+import org.pytorch.PyTorchAndroid;
+import org.pytorch.LiteModuleLoader;
 import org.pytorch.Tensor;
 import org.pytorch.torchvision.TensorImageUtils;
 
@@ -51,7 +53,6 @@ public class FlutterD2goHandler implements MethodChannel.MethodCallHandler {
         if (!NativeLoader.isInitialized()) {
             NativeLoader.init(new SystemDelegate());
         }
-        NativeLoader.loadLibrary("pytorch_jni");
         NativeLoader.loadLibrary("torchvision_ops");
     }
 
@@ -96,8 +97,9 @@ public class FlutterD2goHandler implements MethodChannel.MethodCallHandler {
         String labelPathInAppDir = getFilePathInAppDir(labelPathInFlutterAsset);
         File labels = new File(requireNonNull(labelPathInAppDir));
         try {
-            module = Module.load(modelPathInAppDir);
-
+//            module = Module.load(modelPathInAppDir);
+//            module = PyTorchAndroid.loadModuleFromAsset(context.getAssets(), modelPathInAppDir);
+            module = LiteModuleLoader.load(modelPathInAppDir);
             BufferedReader bufferedReader = new BufferedReader(new FileReader(labels));
             String line;
             while ((line = bufferedReader.readLine()) != null) {
