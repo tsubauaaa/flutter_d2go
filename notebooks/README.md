@@ -1,4 +1,4 @@
-# Notebooks for creating Pytorch Light d2go models
+# Notebooks for creating Pytorch lite d2go models
 
 Those notebooks creates a d2go model for use in the flutter_d2go example app.
 
