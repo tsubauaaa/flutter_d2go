@@ -1,3 +1,7 @@
+## 0.6.0
+
+- upgrade Native library to torch 1.10 (ios) / 1.11 (android).
+
 ## 0.5.1
 
 - Changes for flutter 3.0 support.
