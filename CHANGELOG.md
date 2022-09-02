@@ -1,3 +1,7 @@
+## 0.6.1
+
+- Removed unnecessary import statements.
+
 ## 0.6.0
 
 - upgrade Native library to torch 1.10 (ios) / 1.11 (android).

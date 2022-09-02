@@ -4,7 +4,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'flutter_d2go'
-  s.version          = '0.6.0'
+  s.version          = '0.6.1'
   s.summary          = 'Flutter Plugin inferring using d2go, the mobile model of detectron2.'
   s.description      = <<-DESC
 A new flutter plugin project.
