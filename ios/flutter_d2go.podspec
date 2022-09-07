@@ -19,7 +19,7 @@ A new flutter plugin project.
 
   # Flutter.framework does not contain a i386 slice.
   s.swift_version = '5.0'
-  s.dependency "LibTorch", "~> 1.10.0"
+  s.dependency "LibTorch", "~> 1.9.0"
   s.dependency "LibTorchvision", "0.10.0"
   s.pod_target_xcconfig = { 'HEADER_SEARCH_PATHS' => '$(inherited) "${PODS_ROOT}/LibTorch/install/include"' }
 
