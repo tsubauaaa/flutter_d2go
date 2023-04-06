@@ -103,6 +103,7 @@ void main() {
       imageBytesList: [
         Uint8List.fromList([0, 1, 2])
       ],
+      imageBytesPerRow: 1,
       imageBytesPerPixel: [1, 2, 2],
     );
     expect(res, [
@@ -122,6 +123,7 @@ void main() {
         'imageBytesList': [
           Uint8List.fromList([0, 1, 2])
         ],
+        'imageBytesPerRow': 1,
         'imageBytesPerPixel': [1, 2, 2],
         'width': kWidth,
         'height': kHeight,

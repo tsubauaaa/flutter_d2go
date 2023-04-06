@@ -6,6 +6,9 @@ import 'package:flutter/services.dart';
 /// A list of Y-byte, Cb-byte, and Cr-byte pixel strides.
 const List<int> kBytesPerPixel = [1, 2, 2];
 
+/// Row stride for the color planes, in bytes.
+const int kBytesPerRow = 0;
+
 /// Camera stream image width size.
 const int kWidth = 720;
 
@@ -93,6 +96,7 @@ class FlutterD2go {
   /// Get the inference result of the camera stream image.
   ///
   /// Using the camera stream image [imageBytesList] (required), [imageBytesPerPixel] for inference,
+  /// the row stride for the color planes, in bytes [imageBytesPerRow] is required for iOS
   /// the stream image size [width], [height],
   /// the image size for inference [inputWidth], [inputHeight],
   /// the mean [mean] and standard deviation [std] for image normalization,
@@ -106,6 +110,7 @@ class FlutterD2go {
   static Future<List> getStreamImagePrediction({
     required List<Uint8List> imageBytesList,
     List<int?> imageBytesPerPixel = kBytesPerPixel,
+    int imageBytesPerRow = kBytesPerRow,
     int width = kWidth,
     int height = kHeight,
     int inputWidth = kInputWidth,
@@ -119,6 +124,7 @@ class FlutterD2go {
       'predictStreamImage',
       {
         'imageBytesList': imageBytesList,
+        'imageBytesPerRow': imageBytesPerRow,
         'imageBytesPerPixel': imageBytesPerPixel,
         'width': width,
         'height': height,

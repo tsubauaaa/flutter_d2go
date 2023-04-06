@@ -1,5 +1,6 @@
 import Flutter
 import UIKit
+import VideoToolbox
 
 
 /// FlutterD2goPlugin
@@ -24,6 +25,8 @@ public class SwiftFlutterD2goPlugin: NSObject, FlutterPlugin {
             result(loadModel(args: args))
         } else if ("predictImage" == call.method) {
             result(predictImage(args: args))
+        } else if ("predictStreamImage" == call.method) {
+            result(predictStreamImage(args: args))
         } else {
             result(FlutterMethodNotImplemented)
         }
@@ -83,5 +86,71 @@ public class SwiftFlutterD2goPlugin: NSObject, FlutterPlugin {
         }
         
         return outputs as! [Dictionary<String, AnyObject>]
+    }
+    
+    private func predictStreamImage(args: Dictionary<String, AnyObject>) -> [[String: Any]] {
+        guard let imageBytesList = args["imageBytesList"] as? NSArray,
+              let imageBytes = imageBytesList[0] as? FlutterStandardTypedData,
+              let bytesPerRow = args["imageBytesPerRow"] as? Int else {
+            return []
+        }
+        guard let width = args["width"] as? Int,
+              let height = args["height"] as? Int,
+              let inputWidth = args["inputWidth"] as? Int,
+              let inputHeight = args["inputHeight"] as? Int else {
+            return []
+        }
+        let mean = args["mean"] as! [Float32]
+        let std = args["std"] as! [Float32]
+
+        guard let image = createUIImageFromRawData(data: imageBytes.data,
+                                                   imageWidth: width,
+                                                   imageHeight: height,
+                                                   bytes: bytesPerRow) else {
+            return []
+        }
+
+        let resizedImage = image.resized(to: CGSize(width: CGFloat(inputWidth), height: CGFloat(inputHeight)))
+        guard var pixelBuffer = resizedImage.normalized(mean: mean, std: std) else {
+                  return []
+        }
+        let threshold = args["minScore"] as! Double
+
+        // Call Objective-C's pytorch module.
+        guard let outputs = self.module?.predictImage(&pixelBuffer, width: Int32(image.size.width),
+                                                      height: Int32(image.size.height), inputWidth: Int32(inputWidth),
+                                                      inputHeight: Int32(inputHeight), threshold: threshold) else {
+            return []
+        }
+
+        return outputs as! [Dictionary<String, AnyObject>]
+    }
+
+
+    private func bytesToPixelBuffer(width: Int, height: Int, baseAddress: UnsafeMutableRawPointer, bytesPerRow: Int) -> CVBuffer? {
+        var dstPixelBuffer: CVBuffer?
+        CVPixelBufferCreateWithBytes(kCFAllocatorDefault, width, height, kCVPixelFormatType_32BGRA, baseAddress, bytesPerRow,
+                                     nil, nil, nil, &dstPixelBuffer)
+        return dstPixelBuffer ?? nil
+    }
+    
+    private func createImage(from pixelBuffer: CVPixelBuffer) -> CGImage? {
+        var cgImage: CGImage?
+        VTCreateCGImageFromCVPixelBuffer(pixelBuffer, options: nil, imageOut: &cgImage)
+        return cgImage
+    }
+    
+    private func createUIImageFromRawData(data: Data, imageWidth: Int, imageHeight: Int, bytes: Int) -> UIImage? {
+        data.withUnsafeBytes { rawBufferPointer in
+            let rawPtr = rawBufferPointer.baseAddress!
+            let address = UnsafeMutableRawPointer(mutating:rawPtr)
+            guard let pxBuffer = bytesToPixelBuffer(width: imageWidth, height: imageHeight, baseAddress: address, bytesPerRow: bytes),
+                  let copyImage = pxBuffer.copy(),
+                  let cgiImage = createImage(from: copyImage) else {
+                return nil
+            }
+
+            return UIImage(cgImage: cgiImage)
+        }
     }
 }

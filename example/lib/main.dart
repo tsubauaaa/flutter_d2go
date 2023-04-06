@@ -62,6 +62,7 @@ class _MyAppState extends State<MyApp> {
     controller = CameraController(
       cameras[0],
       ResolutionPreset.high,
+      enableAudio: false,
     );
     await controller!.initialize().then(
       (_) {
@@ -80,6 +81,7 @@ class _MyAppState extends State<MyApp> {
         await FlutterD2go.getStreamImagePrediction(
           imageBytesList:
               cameraImage.planes.map((plane) => plane.bytes).toList(),
+          imageBytesPerRow: cameraImage.planes.first.bytesPerRow,
           width: cameraImage.width,
           height: cameraImage.height,
           minScore: 0.5,
@@ -100,8 +102,8 @@ class _MyAppState extends State<MyApp> {
                       e['mask'],
                       e['keypoints'] != null
                           ? (e['keypoints'] as List)
-                          .map((k) => Keypoint(k[0], k[1]))
-                          .toList()
+                              .map((k) => Keypoint(k[0], k[1]))
+                              .toList()
                           : null,
                       e['confidenceInClass'],
                       e['detectedClass']);
